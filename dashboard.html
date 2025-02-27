@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dashboard-container {
+      text-align: center;
+      padding: 30px;
+    }
+    
+    .welcome-header {
+      margin-bottom: 20px;
+      color: #4CAF50;
+    }
+    
+    .user-info {
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .logout-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .logout-btn:hover {
+      background-color: #d32f2f;
+    }
+    
+    .journal-btn {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .journal-btn:hover {
+      background-color: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="dashboard-container">
+      <h1 class="welcome-header">Welcome to Your Dashboard</h1>
+      
+      <div class="user-info">
+        <h2>User Information</h2>
+        <p id="userName">Name: </p>
+        <p id="userEmail">Email: </p>
+        <p id="loginTime">Login Time: </p>
+      </div>
+      
+      <div class="button-container">
+        <button id="journalBtn" class="journal-btn">Music Journal</button>
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      
+      if (!currentUser) {
+        // Redirect to login page if no user is logged in
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      // Display user information
+      document.getElementById('userName').textContent = `Name: ${currentUser.name}`;
+      document.getElementById('userEmail').textContent = `Email: ${currentUser.email}`;
+      document.getElementById('loginTime').textContent = `Login Time: ${currentUser.loginTime}`;
+      
+      // Handle logout
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'index.html';
+        alert('You have been logged out successfully!');
+      });
+      
+      // Handle journal navigation
+      document.getElementById('journalBtn').addEventListener('click', () => {
+        window.location.href = 'journal.html';
+      });
+    });
+  </script>
+</body>
+</html>
