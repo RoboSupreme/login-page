@@ -3,55 +3,172 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login & Sign Up</title>
+  <title>Music Journal App</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .auth-container {
+      max-width: 400px;
+      width: 90%;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    
+    .tab-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+      color: white;
+      border-bottom: 2px solid white;
+    }
+    
+    .form-container {
+      display: none;
+    }
+    
+    .form-container.active-form {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      outline: none;
+      transition: background-color 0.3s;
+      box-sizing: border-box;
+    }
+    
+    .form-group input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .form-group input:focus {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+    
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      background-color: rgba(255, 255, 255, 0.8);
+      color: #6c5ce7;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
+    }
+    
+    button[type="submit"]:hover {
+      background-color: white;
+      transform: translateY(-2px);
+    }
+    
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      color: #ff7675;
+      font-size: 14px;
+    }
+    
+    .message.success {
+      color: #55efc4;
+    }
+  </style>
 </head>
 <body>
-  <div class="container">
-    <div class="form-container">
-      <div class="form-buttons">
-        <button id="loginBtn" class="active">Login</button>
-        <button id="signupBtn">Sign Up</button>
+  <div class="auth-container">
+    <h1>Music Journal</h1>
+    
+    <div class="tabs">
+      <button class="tab-btn active" id="loginBtn">Login</button>
+      <button class="tab-btn" id="signupBtn">Sign Up</button>
+    </div>
+    
+    <form id="loginForm" class="form-container active-form">
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="Enter your email" required>
       </div>
       
-      <!-- Login Form -->
-      <form id="loginForm" class="active-form">
-        <h2>Login</h2>
-        <div class="form-group">
-          <label for="loginEmail">Email</label>
-          <input type="email" id="loginEmail" required>
-        </div>
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" required>
-        </div>
-        <button type="submit" class="submit-btn">Login</button>
-        <p id="loginMessage" class="message"></p>
-      </form>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+      </div>
       
-      <!-- Sign Up Form -->
-      <form id="signupForm">
-        <h2>Create Account</h2>
-        <div class="form-group">
-          <label for="signupName">Full Name</label>
-          <input type="text" id="signupName" required>
-        </div>
-        <div class="form-group">
-          <label for="signupEmail">Email</label>
-          <input type="email" id="signupEmail" required>
-        </div>
-        <div class="form-group">
-          <label for="signupPassword">Password</label>
-          <input type="password" id="signupPassword" required>
-        </div>
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password</label>
-          <input type="password" id="confirmPassword" required>
-        </div>
-        <button type="submit" class="submit-btn">Sign Up</button>
-        <p id="signupMessage" class="message"></p>
-      </form>
-    </div>
+      <button type="submit">Login</button>
+      <div class="message" id="loginMessage"></div>
+    </form>
+    
+    <form id="signupForm" class="form-container">
+      <div class="form-group">
+        <label for="signupName">Name</label>
+        <input type="text" id="signupName" placeholder="Enter your name" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="signupEmail">Email</label>
+        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="signupPassword">Password</label>
+        <input type="password" id="signupPassword" placeholder="Create a password" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+      </div>
+      
+      <button type="submit">Sign Up</button>
+      <div class="message" id="signupMessage"></div>
+    </form>
   </div>
   
   <script src="script.js"></script>

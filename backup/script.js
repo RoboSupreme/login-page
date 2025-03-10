@@ -122,15 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loginMessage.textContent = 'Login successful! Redirecting...';
     loginMessage.classList.add('success');
     
-    // Redirect to journal page after successful login
+    // Redirect to dashboard page after successful login
     setTimeout(() => {
-      window.location.href = 'journal.html';
+      window.location.href = 'dashboard.html';
     }, 1500);
   });
 
   // Check if user is already logged in using both methods for compatibility
   if (localStorage.getItem('musicUserLoggedIn') === 'true' || localStorage.getItem('currentUser')) {
-    // Redirect to journal if already logged in
-    window.location.href = 'journal.html';
+    // Redirect to dashboard if already logged in
+    window.location.href = 'dashboard.html';
   }
 });

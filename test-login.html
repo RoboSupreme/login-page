@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Login</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    
+    .test-login-container {
+      background-color: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    .message {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    
+    .success {
+      background-color: rgba(76, 175, 80, 0.3);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-login-container">
+    <h1>Test Login Simulator</h1>
+    <div class="form-group">
+      <label for="username">Username (will appear in dashboard)</label>
+      <input type="text" id="username" value="TestUser">
+    </div>
+    
+    <button id="simulateLoginBtn">Simulate Login</button>
+    <p id="message" class="message">Login simulation successful! Redirecting...</p>
+    
+    <script>
+      document.getElementById('simulateLoginBtn').addEventListener('click', function() {
+        const username = document.getElementById('username').value || 'TestUser';
+        
+        // Set the localStorage keys exactly as the authentication site would
+        localStorage.setItem('musicUserLoggedIn', 'true');
+        localStorage.setItem('musicUsername', username);
+        
+        // Optional: Set the currentUser object for backward compatibility
+        localStorage.setItem('currentUser', JSON.stringify({
+          name: username,
+          email: username + '@example.com',
+          loginTime: new Date().toLocaleString()
+        }));
+        
+        // Show success message
+        const message = document.getElementById('message');
+        message.classList.add('success');
+        
+        // Redirect to dashboard after a short delay
+        setTimeout(function() {
+          window.location.href = 'dashboard.html';
+        }, 1500);
+      });
+    </script>
+  </div>
+</body>
+</html>

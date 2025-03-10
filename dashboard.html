@@ -80,30 +80,45 @@
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Check if user is logged in
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      
-      if (!currentUser) {
-        // Redirect to login page if no user is logged in
-        window.location.href = 'index.html';
+      // Check if user is logged in using the specified format
+      if (localStorage.getItem('musicUserLoggedIn') === 'true') {
+        // User is logged in
+        const username = localStorage.getItem('musicUsername');
+        
+        // Display user information
+        document.getElementById('userName').textContent = `Name: ${username}`;
+        
+        // Try to get additional info from currentUser if available
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (currentUser.email) {
+          document.getElementById('userEmail').textContent = `Email: ${currentUser.email}`;
+        } else {
+          document.getElementById('userEmail').textContent = 'Email: Not available';
+        }
+        
+        if (currentUser.loginTime) {
+          document.getElementById('loginTime').textContent = `Login Time: ${currentUser.loginTime}`;
+        } else {
+          document.getElementById('loginTime').textContent = `Login Time: ${new Date().toLocaleString()}`;
+        }
+      } else {
+        // User is not logged in
+        window.location.href = 'https://www.google.com';
         return;
       }
       
-      // Display user information
-      document.getElementById('userName').textContent = `Name: ${currentUser.name}`;
-      document.getElementById('userEmail').textContent = `Email: ${currentUser.email}`;
-      document.getElementById('loginTime').textContent = `Login Time: ${currentUser.loginTime}`;
-      
       // Handle logout
       document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('musicUserLoggedIn');
+        localStorage.removeItem('musicUsername');
         localStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
+        window.location.href = 'https://www.google.com';
         alert('You have been logged out successfully!');
       });
       
       // Handle journal navigation
       document.getElementById('journalBtn').addEventListener('click', () => {
-        window.location.href = 'journal.html';
+        window.location.href = 'journal-new.html';
       });
     });
   </script>

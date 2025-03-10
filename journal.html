@@ -324,7 +324,7 @@
       
       <div class="timeline" id="entriesTimeline">
         <!-- Journal entries will be dynamically added here -->
-        <div class="no-entries" id="noEntriesMessage">
+        <div class="no-entries" id="noEntriesMsg">
           <p>No journal entries yet. Click "Add New Entry" to get started.</p>
         </div>
       </div>
@@ -337,7 +337,7 @@
   <!-- Add Entry Modal -->
   <div id="addEntryModal" class="modal" style="display: none;">
     <div class="modal-content">
-      <span class="close">&times;</span>
+      <span class="close" id="modalClose">&times;</span>
       <h2>Add New Journal Entry</h2>
       <form id="entryForm" style="display: block; width: 100%;">
         <div class="form-group">
@@ -364,225 +364,211 @@
   </div>
   
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // DOM Elements
-      const studentNameElement = document.getElementById('studentName');
-      const backBtn = document.getElementById('backBtn');
-      const addEntryBtn = document.getElementById('addEntryBtn');
-      const addEntryModal = document.getElementById('addEntryModal');
-      const closeModalBtn = document.querySelector('.close');
-      const entryForm = document.getElementById('entryForm');
-      const entriesTimeline = document.getElementById('entriesTimeline');
-      const noEntriesMessage = document.getElementById('noEntriesMessage');
-      const backToTopBtn = document.getElementById('backToTopBtn');
+    // Immediately executing function to avoid global scope pollution
+    (function() {
+      console.log("Script executing");
       
-      console.log("DOM Elements initialized");
-      console.log("Add Entry Button:", addEntryBtn);
-      console.log("Modal:", addEntryModal);
-      
-      // Check if user is logged in
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      if (!currentUser) {
-        window.location.href = 'index.html';
-        return;
+      // Wait for DOM to be fully loaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initialize);
+      } else {
+        initialize();
       }
       
-      // Display student name
-      studentNameElement.textContent = `Student: ${currentUser.name}`;
+      // Main initialization function
+      function initialize() {
+        console.log("Initializing page");
+        
+        // Check login status first
+        if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+          console.log("Not logged in, redirecting");
+          window.location.href = 'index.html';
+          return;
+        }
+        
+        // User is logged in, continue
+        const username = localStorage.getItem('musicUsername');
+        console.log("Logged in as:", username);
+        
+        // Update the header
+        document.querySelector('.header h1').textContent = `${username}'s Music Journal`;
+        document.getElementById('studentName').textContent = `Student: ${username}`;
+        
+        // Get user data for entries
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const userEmail = currentUser.email || username + '@example.com';
+        
+        // Load existing entries
+        loadEntries(userEmail);
+        
+        // Explicit button handlers - USING DIRECT DOM LEVEL 0 EVENTS
+        // Back to Home button
+        const backBtn = document.getElementById('backBtn');
+        backBtn.onclick = function() {
+          console.log("Back button clicked");
+          // Log out the user
+          localStorage.removeItem('musicUserLoggedIn');
+          localStorage.removeItem('musicUsername');
+          localStorage.removeItem('currentUser');
+          window.location.href = 'index.html';
+        };
+        
+        // Add Entry button
+        const addEntryBtn = document.getElementById('addEntryBtn');
+        addEntryBtn.onclick = function() {
+          console.log("Add Entry button clicked");
+          document.getElementById('addEntryModal').style.display = 'block';
+        };
+        
+        // Modal close button
+        const closeBtn = document.querySelector('.close');
+        closeBtn.onclick = function() {
+          console.log("Close button clicked");
+          document.getElementById('addEntryModal').style.display = 'none';
+        };
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+          if (event.target === document.getElementById('addEntryModal')) {
+            document.getElementById('addEntryModal').style.display = 'none';
+          }
+        };
+        
+        // Back to top button
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        backToTopBtn.onclick = function() {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        };
+        
+        // Show/hide back to top button on scroll
+        window.onscroll = function() {
+          if (window.pageYOffset > 300) {
+            backToTopBtn.style.display = 'block';
+          } else {
+            backToTopBtn.style.display = 'none';
+          }
+        };
+        
+        // Form submission
+        const entryForm = document.getElementById('entryForm');
+        entryForm.onsubmit = function(e) {
+          e.preventDefault();
+          console.log("Form submitted");
+          
+          const title = document.getElementById('entryTitle').value;
+          const type = document.getElementById('entryType').value;
+          const link = document.getElementById('entryLink').value;
+          
+          if (!title || !type || !link) {
+            alert('Please fill in all fields');
+            return;
+          }
+          
+          const newEntry = {
+            id: Date.now().toString(),
+            title,
+            type,
+            link,
+            date: new Date().toISOString()
+          };
+          
+          // Add entry to localStorage
+          const entriesKey = `journal_entries_${userEmail}`;
+          const entries = JSON.parse(localStorage.getItem(entriesKey) || '[]');
+          entries.unshift(newEntry);
+          localStorage.setItem(entriesKey, JSON.stringify(entries));
+          
+          // Close modal and reset form
+          document.getElementById('addEntryModal').style.display = 'none';
+          entryForm.reset();
+          
+          // Reload entries
+          loadEntries(userEmail);
+        };
+      }
       
-      // Load journal entries
-      function loadEntries() {
+      // Function to load journal entries
+      function loadEntries(userEmail) {
+        const entriesContainer = document.getElementById('entriesTimeline');
+        const noEntriesMsg = document.getElementById('noEntriesMsg');
+        
         // Get entries from localStorage
-        const entriesKey = `journal_entries_${currentUser.email}`;
+        const entriesKey = `journal_entries_${userEmail}`;
         const entries = JSON.parse(localStorage.getItem(entriesKey) || '[]');
         
         if (entries.length === 0) {
-          noEntriesMessage.style.display = 'block';
-          return;
-        }
-        
-        noEntriesMessage.style.display = 'none';
-        
-        // Clear existing entries
-        const existingEntries = document.querySelectorAll('.entry');
-        existingEntries.forEach(entry => entry.remove());
-        
-        // Add entries to timeline
-        entries.forEach((entry) => {
-          const entryElement = createEntryElement(entry);
-          entriesTimeline.appendChild(entryElement);
-        });
-        
-        // Show back to top button if there are enough entries
-        if (entries.length > 5) {
-          backToTopBtn.style.display = 'block';
+          noEntriesMsg.style.display = 'block';
+          document.getElementById('backToTopBtn').style.display = 'none';
         } else {
-          backToTopBtn.style.display = 'none';
-        }
-      }
-      
-      // Create entry element
-      function createEntryElement(entry) {
-        const entryElement = document.createElement('div');
-        entryElement.className = 'entry';
-        
-        // Format the date
-        const entryDate = new Date(entry.date);
-        const formattedDate = entryDate.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
-        
-        // Determine icon based on entry type
-        let iconClass = '';
-        let entryTypeClass = '';
-        
-        switch (entry.type) {
-          case 'video':
-            iconClass = 'fas fa-video';
-            entryTypeClass = 'entry-type-video';
-            break;
-          case 'document':
-            iconClass = 'fas fa-file-word';
-            entryTypeClass = 'entry-type-document';
-            break;
-          default:
-            iconClass = 'fas fa-link';
-            entryTypeClass = '';
-        }
-        
-        // Create entry content
-        entryElement.innerHTML = `
-          <div class="entry-content">
-            <div class="entry-date">${formattedDate}</div>
-            <h3 class="entry-title">${entry.title}</h3>
-            <p>Click on the icon to open the ${entry.type}</p>
-          </div>
-          <div class="entry-icon ${entryTypeClass}" data-link="${entry.link}">
-            <i class="${iconClass}"></i>
-          </div>
-        `;
-        
-        // Add click event to icon
-        setTimeout(() => {
-          const icon = entryElement.querySelector('.entry-icon');
-          icon.addEventListener('click', () => {
-            window.open(entry.link, '_blank');
+          noEntriesMsg.style.display = 'none';
+          
+          // Clear existing entries
+          const children = Array.from(entriesContainer.children);
+          children.forEach(child => {
+            if (child !== noEntriesMsg) {
+              entriesContainer.removeChild(child);
+            }
           });
-        }, 0);
+          
+          // Add entries to timeline
+          entries.forEach((entry, index) => {
+            const entryElement = createEntryElement(entry);
+            entryElement.classList.add(index % 2 === 0 ? 'left' : 'right');
+            entriesContainer.insertBefore(entryElement, noEntriesMsg);
+          });
+        }
+      }
+      
+      // Function to create entry element
+      function createEntryElement(entry) {
+        const container = document.createElement('div');
+        container.className = 'container';
         
-        return entryElement;
-      }
-      
-      // Direct modal manipulation without animation to ensure it displays properly
-      function showModal() {
-        console.log("Showing modal");
-        addEntryModal.style.display = 'block';
+        const content = document.createElement('div');
+        content.className = 'content';
         
-        // Make sure form is visible and reset
-        entryForm.reset();
-        entryForm.style.display = 'block';
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'entry-title';
         
-        // Log modal content to debug
-        console.log("Modal content:", addEntryModal.innerHTML);
-        console.log("Form fields:");
-        console.log("Title field:", document.getElementById('entryTitle'));
-        console.log("Type field:", document.getElementById('entryType'));
-        console.log("Link field:", document.getElementById('entryLink'));
-      }
-      
-      function hideModal() {
-        console.log("Hiding modal");
-        addEntryModal.style.display = 'none';
-      }
-      
-      // Scroll to top function
-      function scrollToTop() {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
-      
-      // Show/hide back to top button on scroll
-      window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 300) { // Show button after 300px of scrolling
-          backToTopBtn.style.display = 'block';
+        const icon = document.createElement('div');
+        icon.className = `entry-icon ${entry.type}-icon`;
+        
+        const iconElement = document.createElement('i');
+        if (entry.type === 'video') {
+          iconElement.className = 'fas fa-video';
         } else {
-          backToTopBtn.style.display = 'none';
-        }
-      });
-      
-      // Event Listeners
-      backBtn.addEventListener('click', () => {
-        window.location.href = 'dashboard.html';
-      });
-      
-      // Add a very direct click handler for the Add Entry button
-      addEntryBtn.onclick = function() {
-        console.log("Add Entry button clicked");
-        showModal();
-      };
-      
-      closeModalBtn.onclick = function() {
-        hideModal();
-      };
-      
-      window.onclick = function(event) {
-        if (event.target === addEntryModal) {
-          hideModal();
-        }
-      };
-      
-      // Back to top button event
-      backToTopBtn.addEventListener('click', scrollToTop);
-      
-      entryForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        console.log("Form submitted");
-        
-        const title = document.getElementById('entryTitle').value;
-        const type = document.getElementById('entryType').value;
-        const link = document.getElementById('entryLink').value;
-        
-        console.log("Entry data:", { title, type, link });
-        
-        // Validate type selection
-        if (!type) {
-          alert('Please select an entry type');
-          return;
+          iconElement.className = 'fas fa-file-alt';
         }
         
-        // Create new entry
-        const newEntry = {
-          title,
-          type,
-          link,
-          date: new Date().toISOString()
-        };
+        icon.appendChild(iconElement);
         
-        // Get existing entries
-        const entriesKey = `journal_entries_${currentUser.email}`;
-        const entries = JSON.parse(localStorage.getItem(entriesKey) || '[]');
+        const title = document.createElement('h2');
+        title.textContent = entry.title;
         
-        // Add new entry
-        entries.unshift(newEntry); // Add to beginning of array
+        titleDiv.appendChild(icon);
+        titleDiv.appendChild(title);
         
-        // Save updated entries
-        localStorage.setItem(entriesKey, JSON.stringify(entries));
+        const date = document.createElement('p');
+        date.className = 'entry-date';
+        date.textContent = new Date(entry.date).toLocaleString();
         
-        // Close modal and reset form
-        hideModal();
-        entryForm.reset();
+        const link = document.createElement('a');
+        link.href = entry.link;
+        link.className = 'entry-link';
+        link.textContent = 'View in Microsoft';
+        link.target = '_blank';
         
-        // Reload entries
-        loadEntries();
-      });
-      
-      // Initial load of entries
-      loadEntries();
-    });
+        content.appendChild(titleDiv);
+        content.appendChild(date);
+        content.appendChild(link);
+        container.appendChild(content);
+        
+        return container;
+      }
+    })();
   </script>
 </body>
 </html>
