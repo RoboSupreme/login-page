@@ -402,15 +402,12 @@
         loadEntries(userEmail);
         
         // Explicit button handlers - USING DIRECT DOM LEVEL 0 EVENTS
-        // Back to Home button
+        // Back to Dashboard button
         const backBtn = document.getElementById('backBtn');
         backBtn.onclick = function() {
           console.log("Back button clicked");
-          // Log out the user
-          localStorage.removeItem('musicUserLoggedIn');
-          localStorage.removeItem('musicUsername');
-          localStorage.removeItem('currentUser');
-          window.location.href = 'index.html';
+          // Go back to dashboard
+          window.location.href = 'dashboard.html';
         };
         
         // Add Entry button

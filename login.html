@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Music App - Login</title>
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .background-slider {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .slider-img {
+            position: absolute;
+            height: 100%;
+            width: auto;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .slide-left {
+            animation: slideLeft 10s linear;
+        }
+
+        .slide-right {
+            animation: slideRight 10s linear;
+        }
+
+        .slide-top {
+            animation: slideTop 10s linear;
+        }
+
+        .slide-bottom {
+            animation: slideBottom 10s linear;
+        }
+
+        @keyframes slideLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            5% {
+                opacity: 0.3;
+            }
+            95% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes slideRight {
+            0% {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            5% {
+                opacity: 0.3;
+            }
+            95% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes slideTop {
+            0% {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+            5% {
+                opacity: 0.3;
+            }
+            95% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+        }
+
+        @keyframes slideBottom {
+            0% {
+                opacity: 0;
+                transform: translateY(100%);
+            }
+            5% {
+                opacity: 0.3;
+            }
+            95% {
+                opacity: 0.3;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            width: 200px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .form-section {
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .success-message {
+            background: #48bb78;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .success-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .error-message {
+            background: #f56565;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        .error-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .error-window {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: popIn 0.3s ease-out;
+        }
+
+        .error-content {
+            text-align: center;
+        }
+
+        .error-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        .error-window h3 {
+            color: #f56565;
+            margin-bottom: 10px;
+        }
+
+        .error-window p {
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .error-close {
+            background: #f56565;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .error-close:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -60%);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .background-collage {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .collage-img {
+            position: absolute;
+            width: 33.33%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .collage-img:nth-child(1) {
+            top: 0;
+            left: 0;
+        }
+
+        .collage-img:nth-child(2) {
+            top: 0;
+            right: 0;
+        }
+
+        .collage-img:nth-child(3) {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div class="background-slider">
+        <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/1zoJojJNyF1E5MIK?optimizer=image&width=1536" alt="HKIS Image 1" class="slider-img">
+        <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/z1YVNy0F7IhP5kmv?optimizer=image&width=1536" alt="HKIS Image 2" class="slider-img">
+        <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/OUXtie6rUc4St9ea?optimizer=image&width=1536" alt="HKIS Image 3" class="slider-img">
+    </div>
+    <div class="container">
+        <div class="logo">
+            <img src="https://mshandbook.hkis.edu.hk/themes/custom/hkis/images/logo.png" alt="HKIS Logo">
+        </div>
+        
+        <h1>Music Progress</h1>
+        
+        <div id="loginSection">
+            <div class="form-section">
+                <h2>Login</h2>
+                <div id="loginErrorMessage" class="error-message hidden"></div>
+                <div id="loginSuccessMessage" class="success-message hidden"></div>
+                <div id="loginErrorWindow" class="error-window hidden">
+                    <div class="error-content">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7566/7566380.png" alt="Music Error" class="error-icon">
+                        <h3>Account Not Found</h3>
+                        <p>This musician isn't in our database yet! 🎵</p>
+                        <button class="error-close">Got it!</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="loginPassword" placeholder="Password">
+                </div>
+                <button id="loginButton">Login</button>
+            </div>
+
+            <div class="form-section">
+                <h2>Sign Up</h2>
+                <div id="signupErrorMessage" class="error-message hidden"></div>
+                <div id="signupSuccessMessage" class="success-message hidden"></div>
+                <div id="signupErrorWindow" class="error-window hidden">
+                    <div class="error-content">
+                        <img src="https://cdn-icons-png.flaticon.com/512/7566/7566380.png" alt="Music Error" class="error-icon">
+                        <h3>Username Taken</h3>
+                        <p>This stage name is already taken! 🎸</p>
+                        <button class="error-close">Got it!</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="email" id="signupEmail" placeholder="Email" autocomplete="email">
+                </div>
+                <div class="input-group">
+                    <input type="text" id="signupUsername" placeholder="Choose Username" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <input type="password" id="signupPassword" placeholder="Choose Password">
+                </div>
+                <button id="signupButton">Create Account</button>
+            </div>
+        </div>
+
+        <div id="contentSection" class="hidden">
+            <h2>Welcome, <span id="currentUser"></span>!</h2>
+            <p>Redirecting to dashboard...</p>
+        </div>
+    </div>
+    
+    <!-- Use our local script with no external redirects -->
+    <script src="login-script.js"></script>
+    
+    <!-- Add direct confirmation that we're using the local login page -->
+    <script>
+        console.log('LOCAL LOGIN PAGE LOADED');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small indicator that we're using the local version
+            const localIndicator = document.createElement('div');
+            localIndicator.style.position = 'fixed';
+            localIndicator.style.bottom = '10px';
+            localIndicator.style.right = '10px';
+            localIndicator.style.background = 'rgba(0,0,0,0.5)';
+            localIndicator.style.color = 'white';
+            localIndicator.style.padding = '5px 10px';
+            localIndicator.style.borderRadius = '5px';
+            localIndicator.style.fontSize = '12px';
+            localIndicator.textContent = 'Local Testing Mode';
+            document.body.appendChild(localIndicator);
+        });
+    </script>
+</body>
+</html>

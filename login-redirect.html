@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting...</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 400px;
+      width: 90%;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid white;
+      width: 40px;
+      height: 40px;
+      margin: 20px auto;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Login Successful!</h1>
+    <p>Redirecting you back to your dashboard...</p>
+    <div class="spinner"></div>
+  </div>
+
+  <script>
+    // Check for login success in localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      const checkLoginInterval = setInterval(() => {
+        if (localStorage.getItem('musicUserLoggedIn') === 'true') {
+          clearInterval(checkLoginInterval);
+          
+          // Get the return URL or use default
+          const returnUrl = localStorage.getItem('returnAfterLogin') || window.location.origin + '/dashboard.html';
+          
+          // Clear the return URL from localStorage
+          localStorage.removeItem('returnAfterLogin');
+          
+          // Redirect to local dashboard
+          window.location.href = returnUrl;
+        }
+      }, 500); // Check every 500ms
+      
+      // Timeout after 10 seconds if login doesn't happen
+      setTimeout(() => {
+        clearInterval(checkLoginInterval);
+        if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+          document.querySelector('p').textContent = 'Login timed out. Please try again.';
+          document.querySelector('.spinner').style.display = 'none';
+        }
+      }, 10000);
+    });
+  </script>
+</body>
+</html>

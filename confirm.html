@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Confirmation</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .confirm-container {
+      text-align: center;
+      padding: 2rem;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: #09f;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="confirm-container">
+      <h1>Email Confirmation</h1>
+      <p>Processing your confirmation...</p>
+      <div class="spinner"></div>
+      <p id="message">Please wait while we confirm your email.</p>
+    </div>
+  </div>
+  
+  <script>
+    // Process auth tokens from URL and redirect to dashboard
+    document.addEventListener('DOMContentLoaded', () => {
+      // Extract token from URL hash parameters
+      const hashParams = window.location.hash.substring(1).split('&').reduce((result, item) => {
+        const parts = item.split('=');
+        if (parts.length === 2) result[parts[0]] = decodeURIComponent(parts[1]);
+        return result;
+      }, {});
+      
+      // Get message element
+      const messageEl = document.getElementById('message');
+      
+      // If we have an access_token, store the session
+      if (hashParams.access_token) {
+        messageEl.textContent = "Email confirmed successfully! Redirecting to dashboard...";
+        
+        // Store authentication information
+        localStorage.setItem('musicUserLoggedIn', 'true');
+        
+        // Try to get username from the token or use a default
+        const username = hashParams.user_name || 'User';
+        localStorage.setItem('musicUsername', username);
+        
+        // Store additional user info
+        const currentUser = {
+          email: hashParams.email || '',
+          loginTime: new Date().toLocaleString()
+        };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 2000);
+      } else {
+        // No token found
+        messageEl.textContent = "No confirmation token found. Please check your email or contact support.";
+      }
+    });
+  </script>
+</body>
+</html>

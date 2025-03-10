@@ -80,7 +80,34 @@
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Check if user is logged in using the specified format
+      // Check if there's an auth token in the URL (from email confirmation)
+      const hashParams = window.location.hash.substring(1).split('&').reduce((result, item) => {
+        const parts = item.split('=');
+        if (parts.length === 2) result[parts[0]] = decodeURIComponent(parts[1]);
+        return result;
+      }, {});
+      
+      // If we have an access_token, we've been redirected from email confirmation
+      if (hashParams.access_token) {
+        console.log('Auth token found in URL, storing session');
+        // Store authentication information
+        localStorage.setItem('musicUserLoggedIn', 'true');
+        
+        // Try to get username from the token or use a default
+        const username = hashParams.user_name || 'User';
+        localStorage.setItem('musicUsername', username);
+        
+        // Store additional user info
+        const currentUser = {
+          email: hashParams.email || '',
+          loginTime: new Date().toLocaleString()
+        };
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        
+        // Remove the hash from the URL to clean it up
+        window.history.replaceState(null, null, window.location.pathname);
+      }
+      // Check if user is logged in using your friend's login system format
       if (localStorage.getItem('musicUserLoggedIn') === 'true') {
         // User is logged in
         const username = localStorage.getItem('musicUsername');
@@ -102,8 +129,8 @@
           document.getElementById('loginTime').textContent = `Login Time: ${new Date().toLocaleString()}`;
         }
       } else {
-        // User is not logged in
-        window.location.href = 'https://www.google.com';
+        // User is not logged in - redirect to local login page
+        window.location.href = 'login.html';
         return;
       }
       
@@ -112,13 +139,13 @@
         localStorage.removeItem('musicUserLoggedIn');
         localStorage.removeItem('musicUsername');
         localStorage.removeItem('currentUser');
-        window.location.href = 'https://www.google.com';
+        window.location.href = 'login.html';
         alert('You have been logged out successfully!');
       });
       
       // Handle journal navigation
       document.getElementById('journalBtn').addEventListener('click', () => {
-        window.location.href = 'journal-new.html';
+        window.location.href = 'journal.html';
       });
     });
   </script>
