@@ -472,31 +472,73 @@
             date: new Date().toISOString()
           };
           
-          // Add entry to localStorage
-          const entriesKey = `journal_entries_${userEmail}`;
-          const entries = JSON.parse(localStorage.getItem(entriesKey) || '[]');
-          entries.unshift(newEntry);
-          localStorage.setItem(entriesKey, JSON.stringify(entries));
+          // Show loading indicator
+          const submitBtn = document.querySelector('#entryForm button[type="submit"]');
+          const originalBtnText = submitBtn.textContent;
+          submitBtn.textContent = 'Saving...';
+          submitBtn.disabled = true;
           
-          // Close modal and reset form
-          document.getElementById('addEntryModal').style.display = 'none';
-          entryForm.reset();
-          
-          // Reload entries
-          loadEntries(userEmail);
+          // Save entry to Supabase
+          saveEntry(newEntry).then(result => {
+            if (result.success) {
+              console.log('Entry saved to Supabase successfully');
+            } else {
+              console.error('Failed to save entry to Supabase:', result.error);
+              alert('Error saving entry: ' + result.error);
+            }
+            
+            // Reset button state
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
+            
+            // Close modal and reset form
+            document.getElementById('addEntryModal').style.display = 'none';
+            entryForm.reset();
+            
+            // Reload entries
+            loadEntries(userEmail);
+          });
         };
       }
       
       // Function to load journal entries
-      function loadEntries(userEmail) {
+      async function loadEntries(userEmail) {
         const entriesContainer = document.getElementById('entriesTimeline');
         const noEntriesMsg = document.getElementById('noEntriesMsg');
         
-        // Get entries from localStorage
-        const entriesKey = `journal_entries_${userEmail}`;
-        const entries = JSON.parse(localStorage.getItem(entriesKey) || '[]');
+        // Clear existing entries except the noEntriesMsg
+        const children = Array.from(entriesContainer.children);
+        children.forEach(child => {
+          if (child !== noEntriesMsg) {
+            entriesContainer.removeChild(child);
+          }
+        });
         
-        if (entries.length === 0) {
+        // Show loading indicator
+        const loadingMsg = document.createElement('div');
+        loadingMsg.textContent = 'Loading your entries...';
+        loadingMsg.style.textAlign = 'center';
+        loadingMsg.style.padding = '20px';
+        entriesContainer.appendChild(loadingMsg);
+        
+        try {
+          // Get entries from Supabase
+          console.log('Loading entries from Supabase...');
+          const result = await loadEntriesFromSupabase();
+          const entries = result.entries;
+          
+          // Remove loading indicator
+          entriesContainer.removeChild(loadingMsg);
+          
+          if (!result.success) {
+            console.error('Error loading entries:', result.error);
+            alert('Error loading entries: ' + result.error);
+            noEntriesMsg.textContent = 'Error loading entries. Please try again later.';
+            noEntriesMsg.style.display = 'block';
+            return;
+          }
+          
+          if (entries.length === 0) {
           noEntriesMsg.style.display = 'block';
           document.getElementById('backToTopBtn').style.display = 'none';
         } else {
@@ -517,6 +559,15 @@
             entriesContainer.insertBefore(entryElement, noEntriesMsg);
           });
         }
+      } catch (error) {
+        console.error('Exception loading entries:', error);
+        // Remove loading indicator if it exists
+        if (loadingMsg.parentNode) {
+          entriesContainer.removeChild(loadingMsg);
+        }
+        noEntriesMsg.textContent = 'Error loading entries: ' + error.message;
+        noEntriesMsg.style.display = 'block';
+      }
       }
       
       // Function to create entry element
@@ -567,5 +618,10 @@
       }
     })();
   </script>
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  
+  <!-- Journal storage functionality -->
+  <script src="journal-storage.js"></script>
 </body>
 </html>

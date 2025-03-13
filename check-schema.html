@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Supabase Schema</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      line-height: 1.6;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #output {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Supabase Schema Checker</h1>
+  <p>Click the button below to check the schema of the user_entries table:</p>
+  
+  <button onclick="runSchemaCheck()">Check Schema</button>
+  
+  <div id="output">
+    <pre>Results will appear here...</pre>
+  </div>
+
+  <!-- Supabase JS -->
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  
+  <script>
+    function runSchemaCheck() {
+      const outputDiv = document.querySelector('#output pre');
+      outputDiv.textContent = 'Checking schema...\n';
+      
+      // Create a custom console.log that outputs to our pre element
+      const originalLog = console.log;
+      const originalError = console.error;
+      
+      console.log = function() {
+        const args = Array.from(arguments);
+        outputDiv.textContent += args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+        ).join(' ') + '\n';
+        originalLog.apply(console, arguments);
+      };
+      
+      console.error = function() {
+        const args = Array.from(arguments);
+        outputDiv.textContent += 'ERROR: ' + args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+        ).join(' ') + '\n';
+        originalError.apply(console, arguments);
+      };
+      
+      // Load and run the schema check script
+      const script = document.createElement('script');
+      script.src = 'check-schema.js';
+      script.onload = function() {
+        console.log('Schema check complete');
+      };
+      script.onerror = function() {
+        console.error('Failed to load schema check script');
+      };
+      document.body.appendChild(script);
+    }
+  </script>
+</body>
+</html>
