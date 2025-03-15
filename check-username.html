@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Username</title>
+</head>
+<body>
+    <h1>Username Check</h1>
+    <div id="result"></div>
+    
+    <script>
+        // Display username from localStorage
+        const username = localStorage.getItem('musicUsername');
+        document.getElementById('result').innerHTML = 
+            username ? 
+            `Your username is: <strong>${username}</strong>` : 
+            'No username found in localStorage. You need to login first.';
+            
+        // Also log to console
+        console.log("Username from localStorage:", username);
+    </script>
+</body>
+</html>

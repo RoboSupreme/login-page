@@ -164,7 +164,7 @@ async function saveEntry(entryData) {
 // Load all entries for the current user from Supabase
 // If classId is provided, only load entries for that class
 async function loadEntriesFromSupabase(classId = null) {
-    console.log(`DEBUG [loadEntriesFromSupabase] START - Loading entries${classId ? ` for class ${classId}` : ''}...`);
+    console.log(`Attempting to load entries${classId ? ` for class ${classId}` : ''}...`);
     try {
         // Get current user info
         const { username } = getCurrentUser();
@@ -172,7 +172,6 @@ async function loadEntriesFromSupabase(classId = null) {
             console.error('User not logged in');
             return { success: false, error: 'User not logged in', entries: [] };
         }
-        console.log(`DEBUG [loadEntriesFromSupabase] Loading entries for username: ${username}, classId: ${classId}`);
 
         // Build the query to get entries from journal_entries table
         let query = supabaseClient
@@ -183,41 +182,30 @@ async function loadEntriesFromSupabase(classId = null) {
         // If classId is provided, filter by class_id
         // This ensures we only get entries for this user's personal class journal
         if (classId) {
-            console.log(`DEBUG [loadEntriesFromSupabase] Filtering by class_id: ${classId}`);
             query = query.eq('class_id', classId);
         } else {
-            console.log(`DEBUG [loadEntriesFromSupabase] Filtering for entries with NULL class_id`);
             // For personal journal, get entries with no class_id (null)
             query = query.is('class_id', null);
         }
         
         // Execute the query and order by creation date
-        console.log(`DEBUG [loadEntriesFromSupabase] Executing query with filters`);
         const { data: journalEntries, error: journalError } = await query
             .order('created_at', { ascending: false });
 
         // If we successfully got entries from journal_entries table
         if (!journalError && journalEntries && journalEntries.length > 0) {
-            console.log(`DEBUG [loadEntriesFromSupabase] FOUND ${journalEntries.length} ENTRIES in journal_entries table`);
-            console.log('DEBUG [loadEntriesFromSupabase] Entry IDs found:', journalEntries.map(e => e.id).join(', '));
-            console.log('DEBUG [loadEntriesFromSupabase] Raw entries data:', JSON.stringify(journalEntries, null, 2));
+            console.log('Loaded entries from journal_entries table:', journalEntries);
 
             // Convert to our app's format
-            const entries = journalEntries.map(entry => {
-                const formatted = {
-                    id: entry.id,
-                    title: entry.title,
-                    link: entry.link,
-                    date: entry.created_at || new Date().toISOString(),
-                    type: entry.entry_type,
-                    username: entry.username,
-                    class_id: entry.class_id
-                };
-                console.log(`DEBUG [loadEntriesFromSupabase] Formatted entry ${entry.id}:`, JSON.stringify(formatted, null, 2));
-                return formatted;
-            });
+            const entries = journalEntries.map(entry => ({
+                id: entry.id,
+                title: entry.title,
+                link: entry.link,
+                date: entry.created_at || new Date().toISOString(),
+                type: entry.entry_type
+            }));
 
-            console.log(`DEBUG [loadEntriesFromSupabase] RETURNING ${entries.length} formatted entries`);
+            console.log('Formatted entries from journal_entries:', entries);
             return { success: true, entries };
         }
 
@@ -395,11 +383,10 @@ async function deleteEntry(entryId) {
 
 // Update an existing journal entry
 async function updateEntry(entryData) {
-    console.log('DEBUG [updateEntry] Starting with data:', JSON.stringify(entryData, null, 2));
+    console.log('Attempting to update entry:', entryData);
     try {
         // Get current user info
         const { username } = getCurrentUser();
-        console.log('DEBUG [updateEntry] Current username:', username);
         
         if (!username) {
             console.error('User not logged in');
@@ -408,111 +395,31 @@ async function updateEntry(entryData) {
         
         // Get the entry ID
         const entryId = entryData.id;
-        console.log('DEBUG [updateEntry] Entry ID to update:', entryId);
         if (!entryId) {
-            console.error('DEBUG [updateEntry] Error: No entry ID provided');
             return { success: false, error: 'No entry ID provided' };
         }
         
-        // Check if this is a special ID format for profile entries (log1, log2, log3)
-        if (entryId.startsWith('log')) {
-            console.log('DEBUG [updateEntry] Detected profile-based entry, updating profile:', entryId);
-            // This is a profile-based entry (log1, log2, or log3)
-            const logSlot = entryId.charAt(3); // Extract the number from 'log1', 'log2', etc.
-            
-            if (logSlot !== '1' && logSlot !== '2' && logSlot !== '3') {
-                console.error('DEBUG [updateEntry] Invalid log slot:', logSlot);
-                return { success: false, error: 'Invalid log slot' };
-            }
-            
-            // Create update object for the selected slot
-            const update = {};
-            update[`log${logSlot}_youtube`] = entryData.link || '';
-            update[`log${logSlot}_description`] = entryData.title || '';
-            update[`log${logSlot}_date`] = new Date().toISOString();
-            
-            console.log('DEBUG [updateEntry] Updating profile with:', JSON.stringify(update, null, 2));
-            
-            // Update the profile with the new entry
-            const { data: updateData, error: updateError } = await supabaseClient
-                .from('profiles')
-                .update(update)
-                .eq('username', username);
-                
-            if (updateError) {
-                console.error('DEBUG [updateEntry] Error updating profile:', updateError);
-                return { success: false, error: updateError.message };
-            }
-            
-            console.log('DEBUG [updateEntry] Profile updated successfully');
-            return { success: true, data: updateData };
-        }
-        
-        // Regular journal_entries table entry
-        console.log('DEBUG [updateEntry] Attempting to update in journal_entries table');
-        
         // First verify this entry belongs to the current user
-        console.log('DEBUG [updateEntry] Fetching existing entry with ID:', entryId);
         const { data: existingEntry, error: fetchError } = await supabaseClient
             .from('journal_entries')
-            .select('*')  // Select all fields for better debugging
+            .select('id, username')
             .eq('id', entryId)
             .single();
             
         if (fetchError) {
-            console.error('DEBUG [updateEntry] Error fetching entry from journal_entries:', fetchError);
-            console.log('DEBUG [updateEntry] Trying to update entry in user_entries as fallback');
-            
-            // Try to update in user_entries table
-            try {
-                const { data: userEntry, error: userFetchError } = await supabaseClient
-                    .from('user_entries')
-                    .select('*')
-                    .eq('id', entryId)
-                    .single();
-                    
-                if (userFetchError) {
-                    console.error('DEBUG [updateEntry] Error fetching from user_entries:', userFetchError);
-                    return { success: false, error: 'Entry not found in any table' };
-                }
-                
-                // Update in user_entries table
-                const userUpdate = {
-                    youtube_link: entryData.link || '',
-                    description: entryData.title || '',
-                    updated_at: new Date().toISOString()
-                };
-                
-                const { data: userData, error: userUpdateError } = await supabaseClient
-                    .from('user_entries')
-                    .update(userUpdate)
-                    .eq('id', entryId);
-                    
-                if (userUpdateError) {
-                    console.error('DEBUG [updateEntry] Error updating user_entries:', userUpdateError);
-                    return { success: false, error: userUpdateError.message };
-                }
-                
-                console.log('DEBUG [updateEntry] Entry updated in user_entries table');
-                return { success: true, data: userData };
-            } catch (err) {
-                console.error('DEBUG [updateEntry] Error in user_entries fallback:', err);
-                return { success: false, error: err.message };
-            }
+            console.error('Error fetching entry to update:', fetchError);
+            return { success: false, error: fetchError.message };
         }
-        
-        console.log('DEBUG [updateEntry] Found existing entry:', JSON.stringify(existingEntry, null, 2));
         
         // Security check: ensure the entry belongs to this user
         if (existingEntry.username !== username) {
-            console.error('DEBUG [updateEntry] Permission denied. Entry belongs to:', existingEntry.username, 'Current user:', username);
+            console.error('Cannot update entry that belongs to another user');
             return { success: false, error: 'Permission denied' };
         }
         
         // Determine entry type based on link
         const isVideo = entryData.link && entryData.link.includes('youtube');
         const entryType = entryData.type || (isVideo ? 'video' : 'document');
-        console.log('DEBUG [updateEntry] Determined entry type:', entryType);
         
         const updatedEntry = {
             title: entryData.title || '',
@@ -522,9 +429,6 @@ async function updateEntry(entryData) {
             // Don't change username or class_id as they're identity fields
         };
         
-        console.log('DEBUG [updateEntry] Updating with data:', JSON.stringify(updatedEntry, null, 2));
-        console.log('DEBUG [updateEntry] Preserving class_id:', existingEntry.class_id);
-        
         // Update the entry
         const { data, error } = await supabaseClient
             .from('journal_entries')
@@ -532,14 +436,14 @@ async function updateEntry(entryData) {
             .eq('id', entryId);
             
         if (error) {
-            console.error('DEBUG [updateEntry] Error updating entry:', error);
+            console.error('Error updating entry:', error);
             return { success: false, error: error.message };
         }
         
-        console.log('DEBUG [updateEntry] Entry updated successfully! Updated record:', JSON.stringify(data, null, 2));
+        console.log('Entry updated successfully');
         return { success: true, data };
     } catch (error) {
-        console.error('DEBUG [updateEntry] Exception in updateEntry:', error);
+        console.error('Exception updating entry:', error);
         return { success: false, error: error.message };
     }
 }

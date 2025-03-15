@@ -495,20 +495,11 @@
         const entryForm = document.getElementById('entryForm');
         entryForm.onsubmit = function(e) {
           e.preventDefault();
-          console.log("DEBUG [form] Form submitted");
+          console.log("Form submitted");
           
           const title = document.getElementById('entryTitle').value;
           const type = document.getElementById('entryType').value;
           const link = document.getElementById('entryLink').value;
-          const entryId = document.getElementById('entryIdField').value;
-          
-          console.log("DEBUG [form] Form data:", { 
-            title, 
-            type, 
-            link, 
-            entryId, 
-            isEdit: !!entryId 
-          });
           
           if (!title || !type || !link) {
             alert('Please fill in all fields');
@@ -519,84 +510,41 @@
           const urlParams = new URLSearchParams(window.location.search);
           const classId = urlParams.get('class_id');
           
+          const newEntry = {
+            id: Date.now().toString(),
+            title,
+            type,
+            link,
+            date: new Date().toISOString(),
+            classId: classId || null
+          };
+          
           // Show loading indicator
           const submitBtn = document.querySelector('#entryForm button[type="submit"]');
           const originalBtnText = submitBtn.textContent;
           submitBtn.textContent = 'Saving...';
           submitBtn.disabled = true;
           
-          if (entryId) {
-            // Update existing entry
-            console.log('DEBUG [form] Updating existing entry with ID:', entryId);
+          // Save entry to Supabase
+          saveEntry(newEntry).then(result => {
+            if (result.success) {
+              console.log('Entry saved to Supabase successfully');
+            } else {
+              console.error('Failed to save entry to Supabase:', result.error);
+              alert('Error saving entry: ' + result.error);
+            }
             
-            const updatedEntry = {
-              id: entryId,
-              title,
-              type,
-              link,
-              classId: classId || null
-            };
+            // Reset button state
+            submitBtn.textContent = originalBtnText;
+            submitBtn.disabled = false;
             
-            console.log('DEBUG [form] Sending update with data:', JSON.stringify(updatedEntry, null, 2));
+            // Close modal and reset form
+            document.getElementById('addEntryModal').style.display = 'none';
+            entryForm.reset();
             
-            // Update entry in Supabase
-            updateEntry(updatedEntry).then(result => {
-              if (result.success) {
-                console.log('DEBUG [form] Entry updated successfully:', result);
-              } else {
-                console.error('DEBUG [form] Failed to update entry:', result.error);
-                alert('Error updating entry: ' + result.error);
-              }
-              
-              // Reset button state
-              submitBtn.textContent = originalBtnText;
-              submitBtn.disabled = false;
-              
-              // Close modal and reset form
-              document.getElementById('addEntryModal').style.display = 'none';
-              entryForm.reset();
-              document.getElementById('entryIdField').value = '';
-              console.log('DEBUG [form] Reset entryIdField after update');
-              
-              // Reset modal title
-              document.querySelector('#addEntryModal h2').textContent = 'Add New Journal Entry';
-              
-              // Reload entries
-              console.log('DEBUG [form] Reloading entries after update');
-              loadEntries(userEmail, classId);
-            });
-          } else {
-            // Create new entry
-            const newEntry = {
-              id: Date.now().toString(),
-              title,
-              type,
-              link,
-              date: new Date().toISOString(),
-              classId: classId || null
-            };
-            
-            // Save entry to Supabase
-            saveEntry(newEntry).then(result => {
-              if (result.success) {
-                console.log('Entry saved to Supabase successfully');
-              } else {
-                console.error('Failed to save entry to Supabase:', result.error);
-                alert('Error saving entry: ' + result.error);
-              }
-              
-              // Reset button state
-              submitBtn.textContent = originalBtnText;
-              submitBtn.disabled = false;
-              
-              // Close modal and reset form
-              document.getElementById('addEntryModal').style.display = 'none';
-              entryForm.reset();
-              
-              // Reload entries
-              loadEntries(userEmail, classId);
-            });
-          }
+            // Reload entries
+            loadEntries(userEmail);
+          });
         };
       }
       
@@ -627,7 +575,6 @@
       
       // Function to load journal entries
       async function loadEntries(userEmail, classId = null) {
-        console.log('DEBUG [loadEntries] Loading entries:', { userEmail, classId });
         const entriesContainer = document.getElementById('entriesTimeline');
         const noEntriesMsg = document.getElementById('noEntriesMsg');
         
@@ -662,16 +609,11 @@
           const result = await loadEntriesFromSupabase(classIdParam);
           const entries = result.entries;
           
-          console.log('DEBUG [loadEntries] Entries loaded from Supabase:', entries ? entries.length : 0, 'entries');
-          if (entries && entries.length > 0) {
-            console.log('DEBUG [loadEntries] First entry sample:', JSON.stringify(entries[0], null, 2));
-          }
-          
           // Remove loading indicator
           entriesContainer.removeChild(loadingMsg);
           
           if (!result.success) {
-            console.error('DEBUG [loadEntries] Error loading entries:', result.error);
+            console.error('Error loading entries:', result.error);
             alert('Error loading entries: ' + result.error);
             noEntriesMsg.textContent = 'Error loading entries. Please try again later.';
             noEntriesMsg.style.display = 'block';
@@ -679,26 +621,26 @@
           }
           
           if (entries.length === 0) {
-            noEntriesMsg.style.display = 'block';
-            document.getElementById('backToTopBtn').style.display = 'none';
-          } else {
-            noEntriesMsg.style.display = 'none';
-            
-            // Clear existing entries
-            const children = Array.from(entriesContainer.children);
-            children.forEach(child => {
-              if (child !== noEntriesMsg) {
-                entriesContainer.removeChild(child);
-              }
-            });
-            
-            // Add entries to timeline
-            entries.forEach((entry, index) => {
-              const entryElement = createEntryElement(entry);
-              entryElement.classList.add(index % 2 === 0 ? 'left' : 'right');
-              entriesContainer.insertBefore(entryElement, noEntriesMsg);
-            });
-          }
+          noEntriesMsg.style.display = 'block';
+          document.getElementById('backToTopBtn').style.display = 'none';
+        } else {
+          noEntriesMsg.style.display = 'none';
+          
+          // Clear existing entries
+          const children = Array.from(entriesContainer.children);
+          children.forEach(child => {
+            if (child !== noEntriesMsg) {
+              entriesContainer.removeChild(child);
+            }
+          });
+          
+          // Add entries to timeline
+          entries.forEach((entry, index) => {
+            const entryElement = createEntryElement(entry);
+            entryElement.classList.add(index % 2 === 0 ? 'left' : 'right');
+            entriesContainer.insertBefore(entryElement, noEntriesMsg);
+          });
+        }
       } catch (error) {
         console.error('Exception loading entries:', error);
         // Remove loading indicator if it exists
@@ -765,8 +707,7 @@
         
         // Add click handler to edit button
         editButton.addEventListener('click', function() {
-          console.log('DEBUG [editButton] Edit button clicked for entry ID:', this.dataset.entryId);
-          openEditForm(this.dataset.entryId);
+          openEditForm(entry.id);
         });
         
         content.appendChild(titleDiv);
@@ -776,51 +717,6 @@
         container.appendChild(content);
         
         return container;
-      }
-      // Function to open the edit form with a specific entry ID
-      async function openEditForm(entryId) {
-        console.log('DEBUG [openEditForm] Opening edit form for entry ID:', entryId);
-        
-        try {
-          // Reset form first to clear previous data
-          document.getElementById('entryForm').reset();
-          document.getElementById('entryIdField').value = '';
-          
-          console.log('DEBUG [openEditForm] Making Supabase call to fetch entry data');
-          // Get the entry data directly from Supabase - this ensures we get the correct entry
-          const { data: entry, error } = await supabaseClient
-            .from('journal_entries')
-            .select('*')
-            .eq('id', entryId)
-            .single();
-          
-          if (error) {
-            console.error('DEBUG [openEditForm] Error fetching entry for editing:', error);
-            alert('Could not load entry for editing: ' + error.message);
-            return;
-          }
-          
-          console.log('DEBUG [openEditForm] Found entry for editing:', JSON.stringify(entry, null, 2));
-          
-          // Update modal title
-          document.querySelector('#addEntryModal h2').textContent = 'Edit Journal Entry';
-          document.getElementById('saveEntryBtn').textContent = 'Update Entry';
-          
-          // Populate form with entry data
-          console.log('DEBUG [openEditForm] Populating form fields');
-          document.getElementById('entryTitle').value = entry.title || '';
-          document.getElementById('entryType').value = entry.entry_type || '';
-          document.getElementById('entryLink').value = entry.link || '';
-          document.getElementById('entryIdField').value = entry.id;
-          
-          console.log('DEBUG [openEditForm] Set entryIdField to:', entry.id);
-          
-          // Show the modal
-          document.getElementById('addEntryModal').style.display = 'block';
-        } catch (err) {
-          console.error('Exception in openEditForm:', err);
-          alert('Error opening edit form: ' + err.message);
-        }
       }
     })();
   </script>

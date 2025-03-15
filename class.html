@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Class View</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .class-info {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .class-code {
+      display: inline-block;
+      background-color: #e3f2fd;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      background-color: #f0f0f0;
+      transition: background-color 0.2s;
+      flex: 1;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    .tab.active {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .tab:hover:not(.active) {
+      background-color: #e0e0e0;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    
+    .back-btn {
+      background-color: #757575;
+    }
+    
+    .back-btn:hover {
+      background-color: #616161;
+    }
+    
+    .add-btn {
+      background-color: #4CAF50;
+    }
+    
+    .add-btn:hover {
+      background-color: #3e8e41;
+    }
+    
+    .admin-btn {
+      background-color: #ff9800;
+    }
+    
+    .admin-btn:hover {
+      background-color: #e68a00;
+    }
+    
+    .member-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .member-item {
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .member-item:last-child {
+      border-bottom: none;
+    }
+    
+    .member-role {
+      background-color: #e3f2fd;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    
+    .member-role.admin {
+      background-color: #ffcc80;
+    }
+    
+    .journal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .journal-card {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .journal-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .journal-title {
+      margin-top: 0;
+      color: #2196F3;
+    }
+    
+    .journal-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      font-size: 0.8rem;
+      color: #757575;
+    }
+    
+    .admin-controls {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px dashed #ccc;
+      display: none; /* Hidden by default, shown for admins */
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #757575;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1 id="className">Class Name</h1>
+      <button id="backBtn" class="button back-btn">Back to Dashboard</button>
+    </div>
+    
+    <div class="class-info">
+      <p id="classDescription">Loading class information...</p>
+      <div id="classCode" class="class-code">Code: </div>
+      <p id="createdBy">Created by: </p>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="journal">Journal Entries</div>
+      <div class="tab" data-tab="members">Class Members</div>
+    </div>
+    
+    <div id="journalTab" class="tab-content active">
+      <div class="tab-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <h2>My Journal Entries for This Class</h2>
+        <button id="addEntryBtn" class="button add-btn">Add New Entry</button>
+      </div>
+      <p style="margin-bottom: 15px; color: #666;">These are your personal journal entries for this class. Only you can see them.</p>
+      
+      <div id="journalEntriesContainer" class="journal-grid">
+        <div id="emptyJournal" class="empty-state">
+          You haven't added any journal entries to this class yet.
+        </div>
+        <!-- Journal entries will be loaded dynamically -->
+      </div>
+    </div>
+    
+    <div id="membersTab" class="tab-content">
+      <h2>Class Members</h2>
+      <ul id="membersList" class="member-list">
+        <div id="emptyMembers" class="empty-state">
+          Loading class members...
+        </div>
+        <!-- Members will be loaded dynamically -->
+      </ul>
+      
+      <div id="adminControls" class="admin-controls">
+        <h3>Admin Controls</h3>
+        <button id="editClassBtn" class="button admin-btn">Edit Class Details</button>
+        <button id="manageRolesBtn" class="button admin-btn" style="margin-left: 10px;">Manage Member Roles</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    // Get class ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const classId = urlParams.get('id');
+    let currentUsername = '';
+    let userRole = 'student';
+    let classData = null;
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in
+      if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      currentUsername = localStorage.getItem('musicUsername');
+      
+      // Check if class ID is provided
+      if (!classId) {
+        alert('No class ID provided. Redirecting to dashboard.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      
+      // Initialize tabs
+      initTabs();
+      
+      // Load class data
+      await loadClassData();
+      
+      // Load user's role in this class
+      await checkUserRole();
+      
+      // Load class journal entries
+      await loadJournalEntries();
+      
+      // Load class members
+      await loadClassMembers();
+      
+      // Setup event listeners
+      setupEventListeners();
+    });
+    
+    // Initialize tabs
+    function initTabs() {
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // Remove active class from all tabs and contents
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          
+          // Add active class to clicked tab
+          tab.classList.add('active');
+          
+          // Show corresponding content
+          const tabId = tab.getAttribute('data-tab');
+          document.getElementById(`${tabId}Tab`).classList.add('active');
+        });
+      });
+    }
+    
+    // Load class data
+    async function loadClassData() {
+      try {
+        const { data: classroom, error } = await supabaseClient
+          .from('classrooms')
+          .select('*')
+          .eq('id', classId)
+          .single();
+          
+        if (error || !classroom) {
+          console.error('Error loading class data:', error);
+          alert('Failed to load class. Redirecting to dashboard.');
+          window.location.href = 'dashboard.html';
+          return;
+        }
+        
+        classData = classroom;
+        
+        // Update UI with class data
+        document.getElementById('className').textContent = classroom.class_name;
+        document.getElementById('classDescription').textContent = classroom.description || 'No description available.';
+        document.getElementById('classCode').textContent = `Code: ${classroom.class_code}`;
+        document.getElementById('createdBy').textContent = `Created by: ${classroom.created_by}`;
+        
+        // Update page title
+        document.title = `${classroom.class_name} - Music Journal`;
+      } catch (err) {
+        console.error('Error in loadClassData:', err);
+        alert('An unexpected error occurred. Redirecting to dashboard.');
+        window.location.href = 'dashboard.html';
+      }
+    }
+    
+    // Check user's role in this class
+    async function checkUserRole() {
+      try {
+        const { data: membership, error } = await supabaseClient
+          .from('class_memberships')
+          .select('role')
+          .eq('username', currentUsername)
+          .eq('class_id', classId)
+          .single();
+          
+        if (error) {
+          console.error('Error checking user role:', error);
+          return;
+        }
+        
+        userRole = membership.role || 'student';
+        
+        // Show admin controls if user is admin
+        if (userRole === 'admin') {
+          document.getElementById('adminControls').style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error in checkUserRole:', err);
+      }
+    }
+    
+    // Load personal journal entries for this class
+    async function loadJournalEntries() {
+      try {
+        // Get current username
+        const username = localStorage.getItem('musicUsername');
+        if (!username) {
+          console.error('User not logged in');
+          return;
+        }
+        
+        // Get only this user's entries for this class
+        const { data: entries, error } = await supabaseClient
+          .from('journal_entries')
+          .select('*')
+          .eq('username', username)
+          .eq('class_id', classId)
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error loading journal entries:', error);
+          return;
+        }
+        
+        const entriesContainer = document.getElementById('journalEntriesContainer');
+        const emptyState = document.getElementById('emptyJournal');
+        
+        if (!entries || entries.length === 0) {
+          emptyState.textContent = 'You haven\'t added any journal entries to this class yet.';
+          emptyState.style.display = 'block';
+          return;
+        }
+        
+        emptyState.style.display = 'none';
+        
+        // Clear any existing entries
+        entriesContainer.innerHTML = '';
+        
+        // Create cards for each entry
+        entries.forEach(entry => {
+          const card = document.createElement('div');
+          card.className = 'journal-card';
+          
+          // Format date
+          const createdDate = new Date(entry.created_at).toLocaleDateString();
+          
+          card.innerHTML = `
+            <h3 class="journal-title">${entry.title}</h3>
+            <p>Type: ${entry.entry_type || 'N/A'}</p>
+            <div class="journal-meta">
+              <span>By: ${entry.username}</span>
+              <span>Added: ${createdDate}</span>
+            </div>
+          `;
+          
+          // Add click handler to open the entry
+          card.addEventListener('click', () => {
+            if (entry.link) {
+              window.open(entry.link, '_blank');
+            }
+          });
+          
+          entriesContainer.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Error in loadJournalEntries:', err);
+      }
+    }
+    
+    // Load class members
+    async function loadClassMembers() {
+      try {
+        const { data: members, error } = await supabaseClient
+          .from('class_memberships')
+          .select('username, role, joined_at')
+          .eq('class_id', classId)
+          .order('role', { ascending: false });
+          
+        if (error) {
+          console.error('Error loading class members:', error);
+          return;
+        }
+        
+        const membersList = document.getElementById('membersList');
+        const emptyState = document.getElementById('emptyMembers');
+        
+        if (!members || members.length === 0) {
+          emptyState.textContent = 'No members found in this class.';
+          return;
+        }
+        
+        // Hide empty state
+        emptyState.style.display = 'none';
+        
+        // Clear existing members
+        membersList.innerHTML = '';
+        
+        // Create list items for each member
+        members.forEach(member => {
+          const item = document.createElement('li');
+          item.className = 'member-item';
+          
+          // Format join date
+          const joinDate = new Date(member.joined_at).toLocaleDateString();
+          
+          item.innerHTML = `
+            <div>
+              <strong>${member.username}</strong>
+              <div style="font-size: 0.8rem; color: #757575;">Joined: ${joinDate}</div>
+            </div>
+            <span class="member-role ${member.role === 'admin' ? 'admin' : ''}">${
+              member.role.charAt(0).toUpperCase() + member.role.slice(1)
+            }</span>
+          `;
+          
+          membersList.appendChild(item);
+        });
+      } catch (err) {
+        console.error('Error in loadClassMembers:', err);
+      }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+      // Back button
+      document.getElementById('backBtn').addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+      });
+      
+      // Add entry button
+      document.getElementById('addEntryBtn').addEventListener('click', () => {
+        window.location.href = `journal.html?class_id=${classId}&class_name=${encodeURIComponent(classData.class_name)}`;
+      });
+      
+      // Admin buttons (if shown)
+      const editClassBtn = document.getElementById('editClassBtn');
+      if (editClassBtn) {
+        editClassBtn.addEventListener('click', () => {
+          alert('Edit class functionality is coming soon!');
+        });
+      }
+      
+      const manageRolesBtn = document.getElementById('manageRolesBtn');
+      if (manageRolesBtn) {
+        manageRolesBtn.addEventListener('click', () => {
+          alert('Manage roles functionality is coming soon!');
+        });
+      }
+    }
+  </script>
+</body>
+</html>

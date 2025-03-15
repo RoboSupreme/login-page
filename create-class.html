@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create a New Class</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .header {
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    h1 {
+      color: #2196F3;
+      margin: 0;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .create-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .create-btn:hover {
+      background-color: #3e8e41;
+    }
+    
+    .cancel-btn {
+      background-color: #f5f5f5;
+      color: #333;
+      margin-right: 10px;
+    }
+    
+    .cancel-btn:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 30px;
+    }
+    
+    .error-message {
+      color: #f44336;
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    
+    .class-code-display {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-family: monospace;
+      text-align: center;
+      font-size: 18px;
+      letter-spacing: 2px;
+    }
+    
+    .admin-only {
+      background-color: #fff3e0;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Create a New Class</h1>
+    </div>
+    
+    <div class="admin-only">
+      <strong>Admin Access Only:</strong> This page is for creating new classrooms. You will be automatically added as an admin to any class you create.
+    </div>
+    
+    <form id="createClassForm">
+      <div class="form-group">
+        <label for="className">Class Name*</label>
+        <input type="text" id="className" required placeholder="Enter a name for your class" maxlength="100">
+      </div>
+      
+      <div class="form-group">
+        <label for="classCode">Class Code*</label>
+        <input type="text" id="classCode" required placeholder="Enter a unique code for students to join (e.g., MATH101)" maxlength="20">
+        <p class="error-message" id="codeError"></p>
+        <button type="button" id="generateCodeBtn" class="button cancel-btn">Generate Random Code</button>
+      </div>
+      
+      <div class="form-group">
+        <label for="classDescription">Class Description</label>
+        <textarea id="classDescription" placeholder="Enter a description for your class (optional)" maxlength="500"></textarea>
+      </div>
+      
+      <div class="actions">
+        <button type="button" id="cancelBtn" class="button cancel-btn">Cancel</button>
+        <button type="submit" class="button create-btn">Create Class</button>
+      </div>
+    </form>
+  </div>
+  
+  <script>
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in
+      if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      const username = localStorage.getItem('musicUsername');
+      
+      // Check if user is admin
+      try {
+        const { data: profile, error } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('username', username)
+          .single();
+          
+        if (error || !profile || profile.role !== 'admin') {
+          alert('You need admin privileges to access this page.');
+          window.location.href = 'dashboard.html';
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking admin status:', err);
+        alert('Failed to verify admin privileges. Redirecting to dashboard.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      
+      // Setup event listeners
+      document.getElementById('cancelBtn').addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+      });
+      
+      document.getElementById('generateCodeBtn').addEventListener('click', generateRandomCode);
+      
+      document.getElementById('createClassForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await createClass();
+      });
+      
+      // Generate initial random code
+      generateRandomCode();
+    });
+    
+    // Generate a random class code
+    function generateRandomCode() {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      const length = 6;
+      
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      
+      document.getElementById('classCode').value = result;
+      document.getElementById('codeError').textContent = '';
+    }
+    
+    // Create a new class
+    async function createClass() {
+      const className = document.getElementById('className').value.trim();
+      const classCode = document.getElementById('classCode').value.trim();
+      const classDescription = document.getElementById('classDescription').value.trim();
+      const username = localStorage.getItem('musicUsername');
+      
+      if (!className || !classCode) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      
+      try {
+        // Check if class code already exists
+        const { data: existingClass, error: checkError } = await supabaseClient
+          .from('classrooms')
+          .select('id')
+          .eq('class_code', classCode);
+          
+        if (!checkError && existingClass && existingClass.length > 0) {
+          document.getElementById('codeError').textContent = 'This class code already exists. Please choose another.';
+          return;
+        }
+        
+        // Create the class
+        const { data: newClass, error: createError } = await supabaseClient
+          .from('classrooms')
+          .insert([{
+            class_name: className,
+            class_code: classCode,
+            description: classDescription,
+            created_by: username
+          }])
+          .select();
+          
+        if (createError) {
+          console.error('Error creating class:', createError);
+          alert('Failed to create class. Please try again later.');
+          return;
+        }
+        
+        // Add the creator as an admin
+        const { error: memberError } = await supabaseClient
+          .from('class_memberships')
+          .insert([{
+            username: username,
+            class_id: newClass[0].id,
+            role: 'admin'
+          }]);
+          
+        if (memberError) {
+          console.error('Error adding admin membership:', memberError);
+          // We'll continue even if this fails
+        }
+        
+        alert(`Class "${className}" created successfully! Students can join with code: ${classCode}`);
+        window.location.href = `class.html?id=${newClass[0].id}`;
+      } catch (err) {
+        console.error('Error in createClass:', err);
+        alert('An unexpected error occurred. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

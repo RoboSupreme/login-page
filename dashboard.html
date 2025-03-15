@@ -5,81 +5,224 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .dashboard-container {
-      text-align: center;
       padding: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
     
     .welcome-header {
       margin-bottom: 20px;
       color: #4CAF50;
+      text-align: center;
+    }
+    
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 30px;
+    }
+    
+    .sidebar {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     
     .user-info {
-      background-color: #f9f9f9;
-      padding: 15px;
-      border-radius: 4px;
-      margin-bottom: 20px;
+      margin-bottom: 30px;
     }
     
-    .button-container {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
+    .user-info h2 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .join-class {
+      margin-bottom: 30px;
+    }
+    
+    .join-class h2 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .join-class input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .main-content {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .classes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .class-card {
+      background-color: #f0f8ff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    
+    .class-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .class-card h3 {
+      margin-top: 0;
+      color: #2196F3;
+    }
+    
+    .class-code {
+      background-color: #e3f2fd;
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-top: 10px;
+    }
+    
+    .no-classes {
+      text-align: center;
+      padding: 40px;
+      color: #757575;
+      font-style: italic;
+    }
+    
+    .button {
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      color: white;
+      width: 100%;
+      margin-bottom: 10px;
+      transition: background-color 0.2s;
+    }
+    
+    .join-btn {
+      background-color: #4CAF50;
+    }
+    
+    .join-btn:hover {
+      background-color: #3e8e41;
+    }
+    
+    .journal-btn {
+      background-color: #2196F3;
+    }
+    
+    .journal-btn:hover {
+      background-color: #0b7dda;
     }
     
     .logout-btn {
       background-color: #f44336;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
     }
     
     .logout-btn:hover {
       background-color: #d32f2f;
     }
     
-    .journal-btn {
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
+    .admin-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px dashed #ccc;
+      display: none; /* Hidden by default, shown for admins */
     }
     
-    .journal-btn:hover {
-      background-color: #0b7dda;
+    .create-class-btn {
+      background-color: #ff9800;
+    }
+    
+    .create-class-btn:hover {
+      background-color: #e68a00;
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="dashboard-container">
-      <h1 class="welcome-header">Welcome to Your Dashboard</h1>
-      
-      <div class="user-info">
-        <h2>User Information</h2>
-        <p id="userName">Name: </p>
-        <p id="userEmail">Email: </p>
-        <p id="loginTime">Login Time: </p>
+  <div class="dashboard-container">
+    <h1 class="welcome-header">Welcome to Your Music Journal</h1>
+    
+    <div class="dashboard-layout">
+      <!-- Left Sidebar -->
+      <div class="sidebar">
+        <!-- User Information -->
+        <div class="user-info">
+          <h2>User Information</h2>
+          <p id="userName">Name: </p>
+          <p id="userEmail">Email: </p>
+          <p id="userRole">Role: </p>
+          <p id="loginTime">Login Time: </p>
+        </div>
+        
+        <!-- Join Class Section -->
+        <div class="join-class">
+          <h2>Join a Class</h2>
+          <input type="text" id="classCodeInput" placeholder="Enter class code..." />
+          <button id="joinClassBtn" class="button join-btn">Join Class</button>
+        </div>
+        
+        <!-- Action Buttons -->
+        <button id="journalBtn" class="button journal-btn">General Journal</button>
+        <button id="logoutBtn" class="button logout-btn">Logout</button>
+        
+        <!-- Admin Section (shown only for admins) -->
+        <div id="adminSection" class="admin-section">
+          <h2>Admin Actions</h2>
+          <button id="createClassBtn" class="button create-class-btn">Create New Class</button>
+        </div>
       </div>
       
-      <div class="button-container">
-        <button id="journalBtn" class="journal-btn">Music Journal</button>
-        <button id="logoutBtn" class="logout-btn">Logout</button>
+      <!-- Main Content - Classes -->
+      <div class="main-content">
+        <h2>My Classes</h2>
+        <div id="classesContainer" class="classes-grid">
+          <!-- Classes will be loaded dynamically -->
+          <div class="no-classes" id="noClassesMessage">
+            You haven't joined any classes yet. Use the form on the left to join a class with a code.
+          </div>
+        </div>
       </div>
     </div>
   </div>
   
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    document.addEventListener('DOMContentLoaded', async () => {
       // Check if there's an auth token in the URL (from email confirmation)
       const hashParams = window.location.hash.substring(1).split('&').reduce((result, item) => {
         const parts = item.split('=');
@@ -107,6 +250,7 @@
         // Remove the hash from the URL to clean it up
         window.history.replaceState(null, null, window.location.pathname);
       }
+      
       // Check if user is logged in using your friend's login system format
       if (localStorage.getItem('musicUserLoggedIn') === 'true') {
         // User is logged in
@@ -128,6 +272,12 @@
         } else {
           document.getElementById('loginTime').textContent = `Login Time: ${new Date().toLocaleString()}`;
         }
+        
+        // Check if user is admin and update UI accordingly
+        await checkAndDisplayUserRole(username);
+        
+        // Load user's classes
+        await loadUserClasses(username);
       } else {
         // User is not logged in - redirect to local login page
         window.location.href = 'login.html';
@@ -143,11 +293,175 @@
         alert('You have been logged out successfully!');
       });
       
-      // Handle journal navigation
+      // Handle general journal navigation (no class context)
       document.getElementById('journalBtn').addEventListener('click', () => {
         window.location.href = 'journal.html';
       });
+      
+      // Handle join class button
+      document.getElementById('joinClassBtn').addEventListener('click', async () => {
+        const classCode = document.getElementById('classCodeInput').value.trim();
+        if (!classCode) {
+          alert('Please enter a class code');
+          return;
+        }
+        
+        await joinClass(classCode);
+      });
+      
+      // Handle create class button (for admins)
+      const createClassBtn = document.getElementById('createClassBtn');
+      if (createClassBtn) {
+        createClassBtn.addEventListener('click', () => {
+          window.location.href = 'create-class.html';
+        });
+      }
     });
+    
+    // Function to check if user is admin and display appropriate UI
+    async function checkAndDisplayUserRole(username) {
+      try {
+        const { data: profile, error } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('username', username)
+          .single();
+          
+        if (error) {
+          console.error('Error fetching user role:', error);
+          document.getElementById('userRole').textContent = 'Role: Student';
+          return;
+        }
+        
+        // Display user role
+        const role = profile.role || 'student';
+        document.getElementById('userRole').textContent = `Role: ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+        
+        // Show admin section if user is admin
+        if (role === 'admin') {
+          document.getElementById('adminSection').style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error checking user role:', err);
+        document.getElementById('userRole').textContent = 'Role: Student';
+      }
+    }
+    
+    // Function to load user's classes
+    async function loadUserClasses(username) {
+      try {
+        const { data: memberships, error } = await supabaseClient
+          .from('class_memberships')
+          .select(`
+            class_id,
+            role,
+            classrooms(id, class_name, class_code, description)
+          `)
+          .eq('username', username);
+          
+        if (error) {
+          console.error('Error loading classes:', error);
+          return;
+        }
+        
+        const classesContainer = document.getElementById('classesContainer');
+        const noClassesMessage = document.getElementById('noClassesMessage');
+        
+        // If user hasn't joined any classes
+        if (!memberships || memberships.length === 0) {
+          noClassesMessage.style.display = 'block';
+          return;
+        }
+        
+        // Hide the no classes message
+        noClassesMessage.style.display = 'none';
+        
+        // Clear any existing classes
+        classesContainer.innerHTML = '';
+        
+        // Create a card for each class
+        memberships.forEach(membership => {
+          const classroom = membership.classrooms;
+          if (!classroom) return; // Skip if classroom data is missing
+          
+          const classCard = document.createElement('div');
+          classCard.className = 'class-card';
+          classCard.innerHTML = `
+            <h3>${classroom.class_name}</h3>
+            <p>${classroom.description || 'No description'}</p>
+            <div class="class-code">Code: ${classroom.class_code}</div>
+            ${membership.role === 'admin' ? '<span class="admin-badge">Admin</span>' : ''}
+          `;
+          
+          // Add click handler to navigate to class page
+          classCard.addEventListener('click', () => {
+            window.location.href = `class.html?id=${classroom.id}`;
+          });
+          
+          classesContainer.appendChild(classCard);
+        });
+      } catch (err) {
+        console.error('Error in loadUserClasses:', err);
+      }
+    }
+    
+    // Function to join a class by code
+    async function joinClass(classCode) {
+      try {
+        const username = localStorage.getItem('musicUsername');
+        if (!username) {
+          alert('You need to be logged in to join a class');
+          return;
+        }
+        
+        // First, find the class by code
+        const { data: classrooms, error: classError } = await supabaseClient
+          .from('classrooms')
+          .select('id, class_name')
+          .eq('class_code', classCode)
+          .single();
+          
+        if (classError || !classrooms) {
+          alert(`Class not found with code: ${classCode}`);
+          return;
+        }
+        
+        // Check if user is already a member
+        const { data: existing, error: existingError } = await supabaseClient
+          .from('class_memberships')
+          .select('id')
+          .eq('username', username)
+          .eq('class_id', classrooms.id);
+          
+        if (!existingError && existing.length > 0) {
+          alert(`You are already a member of ${classrooms.class_name}`);
+          return;
+        }
+        
+        // Create the membership
+        const { error: joinError } = await supabaseClient
+          .from('class_memberships')
+          .insert([{
+            username: username,
+            class_id: classrooms.id,
+            role: 'student' // Default role is student
+          }]);
+          
+        if (joinError) {
+          console.error('Error joining class:', joinError);
+          alert('Failed to join class. Please try again later.');
+          return;
+        }
+        
+        alert(`Successfully joined ${classrooms.class_name}!`);
+        
+        // Reload the page to show the new class
+        window.location.reload();
+      } catch (err) {
+        console.error('Error in joinClass:', err);
+        alert('An unexpected error occurred. Please try again.');
+      }
+    }
   </script>
 </body>
 </html>

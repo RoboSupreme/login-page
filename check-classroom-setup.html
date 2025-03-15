@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Setup Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+        }
+        .instructions {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>Classroom Setup Test</h1>
+    
+    <div class="instructions">
+        <p>This page will test if your Supabase database is correctly set up for the classroom functionality:</p>
+        <ol>
+            <li>It will check if your user profile has the <code>role</code> field</li>
+            <li>It will attempt to create a test classroom</li>
+            <li>It will add your user as an admin to that classroom</li>
+            <li>It will create a test journal entry in that classroom</li>
+            <li>It will retrieve journal entries for that classroom</li>
+        </ol>
+        <p><strong>Important:</strong> You must be logged in first. Please make sure <code>musicUsername</code> is set in your localStorage.</p>
+    </div>
+    
+    <button class="button" onclick="location.reload()">Run Test Again</button>
+    
+    <p>Check your browser console (F12 or right-click → Inspect → Console) to see the test results.</p>
+    
+    <script src="check-classroom-setup.js"></script>
+</body>
+</html>
