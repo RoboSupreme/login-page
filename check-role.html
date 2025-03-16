@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check Role</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px 0;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Role Checker</h1>
+  <p>This page will help diagnose issues with role detection and show what's happening in localStorage and the database.</p>
+  
+  <div id="results">Loading...</div>
+  
+  <button id="refreshBtn">Refresh Data</button>
+  <button id="fixRoleBtn">Fix Role in localStorage</button>
+  <button id="dashboardBtn">Go to Dashboard</button>
+  
+  <script>
+    // Initialize Supabase client with your friend's credentials
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    // Check role status on page load
+    document.addEventListener('DOMContentLoaded', checkRoleStatus);
+    
+    // Refresh button handler
+    document.getElementById('refreshBtn').addEventListener('click', checkRoleStatus);
+    
+    // Fix role button handler
+    document.getElementById('fixRoleBtn').addEventListener('click', fixRole);
+    
+    // Dashboard button handler
+    document.getElementById('dashboardBtn').addEventListener('click', () => {
+      window.location.href = 'dashboard.html';
+    });
+    
+    // Function to check and display role status
+    async function checkRoleStatus() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = 'Loading...';
+      
+      try {
+        // Get localStorage state
+        const isLoggedIn = localStorage.getItem('musicUserLoggedIn');
+        const username = localStorage.getItem('musicUsername');
+        const storedRole = localStorage.getItem('musicUserRole');
+        
+        // Check database role if logged in
+        let dbRole = 'Not logged in';
+        if (isLoggedIn === 'true' && username) {
+          const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('role')
+            .eq('username', username)
+            .single();
+            
+          if (error) {
+            dbRole = `Error: ${error.message}`;
+          } else {
+            dbRole = profile.role || 'student (default)';
+          }
+        }
+        
+        // Generate report
+        const report = `
+        <h2>Authentication Status</h2>
+        <pre>
+Logged in: ${isLoggedIn === 'true' ? 'Yes' : 'No'}
+Username: ${username || 'None'}
+Role in localStorage: ${storedRole || 'Not set'}
+Role in database: ${dbRole}
+        </pre>
+        
+        <h2>All localStorage Items</h2>
+        <pre>
+${JSON.stringify(getAllLocalStorage(), null, 2)}
+        </pre>
+        
+        <h2>Status</h2>
+        <p>${getRoleStatus(isLoggedIn, username, storedRole, dbRole)}</p>
+        `;
+        
+        resultsDiv.innerHTML = report;
+      } catch (err) {
+        resultsDiv.innerHTML = `<p>Error: ${err.message}</p>`;
+      }
+    }
+    
+    // Get all localStorage items
+    function getAllLocalStorage() {
+      const items = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        let value = localStorage.getItem(key);
+        
+        // Try to parse JSON values
+        try {
+          value = JSON.parse(value);
+        } catch (e) {
+          // Not JSON, keep as string
+        }
+        
+        items[key] = value;
+      }
+      return items;
+    }
+    
+    // Get a human-readable status message
+    function getRoleStatus(isLoggedIn, username, storedRole, dbRole) {
+      if (isLoggedIn !== 'true') {
+        return 'You are not logged in. Please log in first.';
+      }
+      
+      if (!username) {
+        return 'Username is missing from localStorage. Please log out and log in again.';
+      }
+      
+      if (!storedRole && dbRole !== 'Not logged in' && dbRole !== 'Error') {
+        return `Your role (${dbRole}) is in the database but not in localStorage. Use the "Fix Role" button to fix this.`;
+      }
+      
+      if (storedRole !== dbRole && dbRole !== 'Not logged in' && dbRole !== 'Error') {
+        return `Your role in localStorage (${storedRole}) doesn't match the database (${dbRole}). Use the "Fix Role" button to update.`;
+      }
+      
+      if (dbRole === 'teacher' && storedRole === 'teacher') {
+        return 'You are correctly set up as a teacher. The "Create Class" button should be visible on the dashboard.';
+      }
+      
+      return 'Your role appears to be set up correctly.';
+    }
+    
+    // Fix role in localStorage
+    async function fixRole() {
+      const username = localStorage.getItem('musicUsername');
+      
+      if (!username) {
+        alert('No username found. Please log in first.');
+        return;
+      }
+      
+      try {
+        const { data: profile, error } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('username', username)
+          .single();
+          
+        if (error) {
+          alert(`Error fetching role: ${error.message}`);
+          return;
+        }
+        
+        const role = profile.role || 'student';
+        localStorage.setItem('musicUserRole', role);
+        alert(`Role updated in localStorage to: ${role}`);
+        
+        // Refresh the display
+        checkRoleStatus();
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      }
+    }
+  </script>
+</body>
+</html>

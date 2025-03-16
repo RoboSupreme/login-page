@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Class</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .manage-container {
+      padding: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .class-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .class-title {
+      color: #4CAF50;
+      margin: 0;
+    }
+    
+    .back-btn {
+      background-color: #f1f1f1;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      margin-right: 5px;
+      border-radius: 4px 4px 0 0;
+    }
+    
+    .tab.active {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .members-list {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .members-list th, .members-list td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .members-list th {
+      background-color: #f9f9f9;
+      font-weight: bold;
+    }
+    
+    .members-list tr:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+    
+    .promote-btn {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    .demote-btn {
+      background-color: #ff9800;
+      color: white;
+    }
+    
+    .remove-btn {
+      background-color: #f44336;
+      color: white;
+    }
+    
+    .entries-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .student-entries {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .entry-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    
+    .user-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+    
+    .admin-badge {
+      background-color: #ff9800;
+      color: white;
+    }
+    
+    .teacher-badge {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .creator-badge {
+      background-color: #2196F3;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="manage-container">
+    <div class="class-header">
+      <h1 class="class-title" id="className">Class Name</h1>
+      <button class="back-btn" id="backBtn">Back to Dashboard</button>
+    </div>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="members">Members</div>
+      <div class="tab" data-tab="entries">Student Entries</div>
+    </div>
+    
+    <div class="tab-content active" id="membersTab">
+      <table class="members-list">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="membersList">
+          <!-- Members will be loaded dynamically -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="tab-content" id="entriesTab">
+      <div class="student-entries" id="studentEntries">
+        <!-- Student entries will be loaded dynamically -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check if user is logged in using localStorage
+      if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Get username and role
+      const username = localStorage.getItem('musicUsername');
+      const userRole = localStorage.getItem('musicUserRole');
+      
+      // Only teachers should access this page
+      if (userRole !== 'teacher') {
+        alert('You do not have permission to access this page.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      
+      // Get class ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const classId = urlParams.get('id');
+      
+      if (!classId) {
+        alert('No class ID provided.');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      
+      // Load class info
+      await loadClassInfo(classId);
+      
+      // Load class members
+      await loadClassMembers(classId, username);
+      
+      // Set up tab switching
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabId = tab.getAttribute('data-tab');
+          
+          // Update active tab
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          
+          // Update active content
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+          });
+          
+          if (tabId === 'members') {
+            document.getElementById('membersTab').classList.add('active');
+          } else if (tabId === 'entries') {
+            document.getElementById('entriesTab').classList.add('active');
+            loadClassEntries(classId);
+          }
+        });
+      });
+      
+      // Back button handler
+      document.getElementById('backBtn').addEventListener('click', () => {
+        window.location.href = 'dashboard.html';
+      });
+    });
+    
+    // Load class information
+    async function loadClassInfo(classId) {
+      try {
+        const { data: classData, error } = await supabaseClient
+          .from('classrooms')
+          .select('*')
+          .eq('id', classId)
+          .single();
+          
+        if (error) {
+          console.error('Error loading class info:', error);
+          document.getElementById('className').textContent = 'Unknown Class';
+          return;
+        }
+        
+        // Set class name
+        document.getElementById('className').textContent = classData.class_name;
+        
+        // Set page title
+        document.title = `Manage ${classData.class_name}`;
+      } catch (err) {
+        console.error('Exception loading class info:', err);
+      }
+    }
+    
+    // Load class members
+    async function loadClassMembers(classId, currentUsername) {
+      try {
+        // First get the class creator to determine permissions
+        const { data: classData, error: classError } = await supabaseClient
+          .from('classrooms')
+          .select('creator_username')
+          .eq('id', classId)
+          .single();
+          
+        if (classError) {
+          console.error('Error fetching class creator:', classError);
+          return;
+        }
+        
+        const isCreator = classData.creator_username === currentUsername;
+        
+        // Now get all members
+        const { data: members, error } = await supabaseClient
+          .from('class_memberships')
+          .select('username, role, joined_at, profiles(username)')
+          .eq('class_id', classId)
+          .order('joined_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error loading class members:', error);
+          return;
+        }
+        
+        const membersList = document.getElementById('membersList');
+        membersList.innerHTML = '';
+        
+        members.forEach(member => {
+          const row = document.createElement('tr');
+          
+          const username = member.username;
+          const memberIsCreator = username === classData.creator_username;
+          
+          // Determine if current user can manage this member
+          // Teacher/creator can manage everyone
+          // Class admins can only manage non-admins
+          const canManage = isCreator || (member.role !== 'admin' && !memberIsCreator);
+          
+          row.innerHTML = `
+            <td>
+              ${username}
+              ${memberIsCreator ? '<span class="user-badge creator-badge">Creator</span>' : ''}
+            </td>
+            <td>${member.role || 'student'}</td>
+            <td>${new Date(member.joined_at).toLocaleDateString()}</td>
+            <td>
+              ${canManage ? `
+                ${!memberIsCreator ? `
+                  ${member.role !== 'admin' ? 
+                    '<button class="action-btn promote-btn" data-username="' + username + '">Make Admin</button>' :
+                    '<button class="action-btn demote-btn" data-username="' + username + '">Remove Admin</button>'
+                  }
+                  <button class="action-btn remove-btn" data-username="${username}">Remove</button>
+                ` : ''}
+              ` : ''}
+              <button class="action-btn entries-btn" data-username="${username}">View Entries</button>
+            </td>
+          `;
+          
+          membersList.appendChild(row);
+        });
+        
+        // Add event listeners for action buttons
+        document.querySelectorAll('.promote-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const username = btn.getAttribute('data-username');
+            await updateMemberRole(classId, username, 'admin');
+          });
+        });
+        
+        document.querySelectorAll('.demote-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const username = btn.getAttribute('data-username');
+            await updateMemberRole(classId, username, 'student');
+          });
+        });
+        
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const username = btn.getAttribute('data-username');
+            await removeMember(classId, username);
+          });
+        });
+        
+        document.querySelectorAll('.entries-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const username = btn.getAttribute('data-username');
+            
+            // Switch to entries tab
+            document.querySelector('.tab[data-tab="entries"]').click();
+            
+            // Load this specific user's entries
+            loadClassEntries(classId, username);
+          });
+        });
+      } catch (err) {
+        console.error('Exception loading class members:', err);
+      }
+    }
+    
+    // Update a member's role
+    async function updateMemberRole(classId, username, newRole) {
+      try {
+        const { error } = await supabaseClient
+          .from('class_memberships')
+          .update({ role: newRole })
+          .eq('class_id', classId)
+          .eq('username', username);
+          
+        if (error) {
+          console.error('Error updating member role:', error);
+          alert(`Error updating role: ${error.message}`);
+          return;
+        }
+        
+        alert(`${username} is now a class ${newRole}.`);
+        
+        // Reload members
+        const currentUsername = localStorage.getItem('musicUsername');
+        await loadClassMembers(classId, currentUsername);
+      } catch (err) {
+        console.error('Exception updating member role:', err);
+        alert('Error updating role. Please try again.');
+      }
+    }
+    
+    // Remove a member from the class
+    async function removeMember(classId, username) {
+      if (!confirm(`Are you sure you want to remove ${username} from this class?`)) {
+        return;
+      }
+      
+      try {
+        const { error } = await supabaseClient
+          .from('class_memberships')
+          .delete()
+          .eq('class_id', classId)
+          .eq('username', username);
+          
+        if (error) {
+          console.error('Error removing member:', error);
+          alert(`Error removing member: ${error.message}`);
+          return;
+        }
+        
+        alert(`${username} has been removed from the class.`);
+        
+        // Reload members
+        const currentUsername = localStorage.getItem('musicUsername');
+        await loadClassMembers(classId, currentUsername);
+      } catch (err) {
+        console.error('Exception removing member:', err);
+        alert('Error removing member. Please try again.');
+      }
+    }
+    
+    // Load class entries for all or specific student
+    async function loadClassEntries(classId, specificUsername = null) {
+      try {
+        const studentEntries = document.getElementById('studentEntries');
+        studentEntries.innerHTML = '<p>Loading entries...</p>';
+        
+        // Build query to get journal entries for this class
+        let query = supabaseClient
+          .from('journal_entries')
+          .select('*, profiles(username)')
+          .eq('class_id', classId);
+          
+        // If specific username provided, filter by that
+        if (specificUsername) {
+          query = query.eq('username', specificUsername);
+        }
+        
+        // Execute query
+        const { data: entries, error } = await query
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error loading entries:', error);
+          studentEntries.innerHTML = `<p>Error loading entries: ${error.message}</p>`;
+          return;
+        }
+        
+        if (!entries || entries.length === 0) {
+          studentEntries.innerHTML = '<p>No entries found for this class.</p>';
+          return;
+        }
+        
+        // Display entries
+        studentEntries.innerHTML = '';
+        
+        entries.forEach(entry => {
+          const entryCard = document.createElement('div');
+          entryCard.className = 'entry-card';
+          
+          const entryDate = new Date(entry.created_at).toLocaleDateString();
+          
+          entryCard.innerHTML = `
+            <h3>${entry.title}</h3>
+            <p>By: ${entry.username}</p>
+            <p>Type: ${entry.entry_type}</p>
+            <p>Date: ${entryDate}</p>
+            <p><a href="${entry.link}" target="_blank">View Resource</a></p>
+          `;
+          
+          studentEntries.appendChild(entryCard);
+        });
+      } catch (err) {
+        console.error('Exception loading entries:', err);
+        document.getElementById('studentEntries').innerHTML = 
+          `<p>Error loading entries: ${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

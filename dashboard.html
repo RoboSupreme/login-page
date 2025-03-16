@@ -184,21 +184,51 @@
           <p id="loginTime">Login Time: </p>
         </div>
         
-        <!-- Join Class Section -->
+        <!-- Join Class Section - Everyone can join classes -->
         <div class="join-class">
           <h2>Join a Class</h2>
           <input type="text" id="classCodeInput" placeholder="Enter class code..." />
           <button id="joinClassBtn" class="button join-btn">Join Class</button>
         </div>
         
-        <!-- Action Buttons -->
-        <button id="journalBtn" class="button journal-btn">General Journal</button>
-        <button id="logoutBtn" class="button logout-btn">Logout</button>
+        <!-- Teacher-only button and form -->
+        <button id="createClassBtn" class="button create-class-btn" style="display: none; width: 100%; padding: 10px; margin-top: 20px; margin-bottom: 10px; background-color: #FFD700; color: black; border: none; border-radius: 4px; cursor: pointer;">Create New Class</button>
+        
+        <!-- Class Creation Form (initially hidden) -->
+        <div id="createClassForm" style="display: none; margin-top: 10px; padding: 15px; background-color: #f9f9f9; border-radius: 4px; border: 1px solid #ddd;">
+          <div style="margin-bottom: 10px;">
+            <label for="className" style="display: block; margin-bottom: 5px;">Class Name*</label>
+            <input type="text" id="className" placeholder="Enter class name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+            <label for="classDescription" style="display: block; margin-bottom: 5px;">Description</label>
+            <textarea id="classDescription" placeholder="Enter class description" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 80px;"></textarea>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+            <label for="classCode" style="display: block; margin-bottom: 5px;">Class Code*</label>
+            <div style="display: flex;">
+              <input type="text" id="classCode" placeholder="Code" style="flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px 0 0 4px;" readonly>
+              <button id="generateCodeBtn" style="padding: 8px; background: #eee; border: 1px solid #ddd; border-radius: 0 4px 4px 0;">🔄</button>
+            </div>
+            <p id="codeError" style="color: red; font-size: 12px; margin-top: 4px;"></p>
+          </div>
+          
+          <div style="display: flex; gap: 10px;">
+            <button id="submitClassBtn" class="button" style="flex-grow: 1; padding: 8px; background-color: #FFD700; color: black; border: none; border-radius: 4px; cursor: pointer;">Create Class</button>
+            <button id="cancelClassBtn" class="button" style="flex-grow: 1; padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;">Cancel</button>
+          </div>
+        </div>
+        
+        <!-- Common Action Buttons (visible to all) -->
+        <button id="journalBtn" class="button journal-btn" style="display: block; width: 100%; padding: 10px; margin-top: 20px; margin-bottom: 10px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">General Journal</button>
+        <button id="logoutBtn" class="button logout-btn" style="display: block; width: 100%; padding: 10px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Logout</button>
         
         <!-- Admin Section (shown only for admins) -->
         <div id="adminSection" class="admin-section">
           <h2>Admin Actions</h2>
-          <button id="createClassBtn" class="button create-class-btn">Create New Class</button>
+          <!-- Admin-specific actions would go here -->
         </div>
       </div>
       
@@ -273,11 +303,12 @@
           document.getElementById('loginTime').textContent = `Login Time: ${new Date().toLocaleString()}`;
         }
         
-        // Check if user is admin and update UI accordingly
-        await checkAndDisplayUserRole(username);
+        // Check if user is admin/teacher and update UI accordingly
+        const userRole = await checkAndDisplayUserRole(username);
+        console.log('User role returned from check:', userRole);
         
-        // Load user's classes
-        await loadUserClasses(username);
+        // Load user's classes with role context
+        await loadUserClasses(username, userRole);
       } else {
         // User is not logged in - redirect to local login page
         window.location.href = 'login.html';
@@ -309,18 +340,162 @@
         await joinClass(classCode);
       });
       
-      // Handle create class button (for admins)
+      // Handle create class button and form (for teachers and admins)
       const createClassBtn = document.getElementById('createClassBtn');
+      const createClassForm = document.getElementById('createClassForm');
+      const generateCodeBtn = document.getElementById('generateCodeBtn');
+      const submitClassBtn = document.getElementById('submitClassBtn');
+      const cancelClassBtn = document.getElementById('cancelClassBtn');
+      
       if (createClassBtn) {
+        // Toggle form visibility when button is clicked
         createClassBtn.addEventListener('click', () => {
-          window.location.href = 'create-class.html';
+          // Generate initial class code if form is being shown
+          if (createClassForm.style.display === 'none') {
+            generateRandomCode();
+            createClassForm.style.display = 'block';
+          } else {
+            createClassForm.style.display = 'none';
+          }
         });
+      }
+      
+      // Generate a random class code
+      function generateRandomCode() {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        const length = 6;
+        
+        for (let i = 0; i < length; i++) {
+          result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        
+        document.getElementById('classCode').value = result;
+        document.getElementById('codeError').textContent = '';
+      }
+      
+      // Setup generate code button
+      if (generateCodeBtn) {
+        generateCodeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          generateRandomCode();
+        });
+      }
+      
+      // Handle class creation submission
+      if (submitClassBtn) {
+        submitClassBtn.addEventListener('click', async () => {
+          await createClass();
+        });
+      }
+      
+      // Handle cancel button
+      if (cancelClassBtn) {
+        cancelClassBtn.addEventListener('click', () => {
+          createClassForm.style.display = 'none';
+        });
+      }
+      
+      // Create a new class
+      async function createClass() {
+        const className = document.getElementById('className').value.trim();
+        const classCode = document.getElementById('classCode').value.trim();
+        const classDescription = document.getElementById('classDescription').value.trim();
+        const username = localStorage.getItem('musicUsername');
+        
+        if (!className || !classCode) {
+          alert('Please fill in all required fields.');
+          return;
+        }
+        
+        try {
+          console.log('Creating class with name:', className, 'code:', classCode);
+          
+          // Check if class code already exists
+          const { data: existingClass, error: checkError } = await supabaseClient
+            .from('classrooms')
+            .select('id')
+            .eq('class_code', classCode);
+          
+          console.log('Check for existing class result:', existingClass);
+          
+          if (checkError) {
+            console.error('Error checking existing class:', checkError);
+          }
+            
+          if (!checkError && existingClass && existingClass.length > 0) {
+            document.getElementById('codeError').textContent = 'This class code already exists. Please choose another.';
+            return;
+          }
+          
+          // Create the class (strictly matching the table structure)
+          const { data: newClass, error: createError } = await supabaseClient
+            .from('classrooms')
+            .insert({
+              class_name: className,
+              class_code: classCode,
+              description: classDescription,
+              created_by: username
+            })
+            .select();
+          
+          console.log('Class creation result:', newClass);
+            
+          if (createError) {
+            console.error('Error creating class:', createError);
+            alert('Failed to create class. Please try again later.');
+            return;
+          }
+          
+          if (!newClass || newClass.length === 0) {
+            console.error('No class data returned after creation');
+            alert('Class was created but an error occurred. Please refresh the page.');
+            return;
+          }
+          
+          const classId = newClass[0].id;
+          console.log('Created class with ID:', classId);
+          
+          // Add the creator as an admin in class_memberships
+          const { data: memberData, error: memberError } = await supabaseClient
+            .from('class_memberships')
+            .insert({
+              username: username,
+              class_id: classId,
+              role: 'admin'
+              // joined_at will be handled by the database default
+            })
+            .select();
+          
+          console.log('Class membership result:', memberData);
+            
+          if (memberError) {
+            console.error('Error adding admin membership:', memberError);
+            alert('Class created, but there was an issue adding you as a member. Please try joining manually.');
+          } else {
+            alert(`Class "${className}" created successfully! Students can join with code: ${classCode}`);
+          }
+          
+          // Hide the form
+          createClassForm.style.display = 'none';
+          
+          // Clear the form
+          document.getElementById('className').value = '';
+          document.getElementById('classDescription').value = '';
+          
+          // Refresh the class list
+          loadUserClasses(username, localStorage.getItem('musicUserRole'));
+        } catch (err) {
+          console.error('Error in createClass:', err);
+          alert('An unexpected error occurred. Please try again.');
+        }
       }
     });
     
-    // Function to check if user is admin and display appropriate UI
+    // Function to check if user is admin/teacher and display appropriate UI
     async function checkAndDisplayUserRole(username) {
       try {
+        console.log('Checking role for user:', username);
         const { data: profile, error } = await supabaseClient
           .from('profiles')
           .select('role')
@@ -330,25 +505,66 @@
         if (error) {
           console.error('Error fetching user role:', error);
           document.getElementById('userRole').textContent = 'Role: Student';
-          return;
+          return 'student';
         }
         
-        // Display user role
+        console.log('Profile data received:', profile);
+        
+        // Display user role (default to student if not set)
         const role = profile.role || 'student';
         document.getElementById('userRole').textContent = `Role: ${role.charAt(0).toUpperCase() + role.slice(1)}`;
         
+        // Store role in localStorage for easy access across pages
+        localStorage.setItem('musicUserRole', role);
+        console.log('Role set in localStorage:', role);
+        
         // Show admin section if user is admin
         if (role === 'admin') {
+          console.log('User is admin, showing admin section');
           document.getElementById('adminSection').style.display = 'block';
+          // Show create class button for admins
+          document.getElementById('createClassBtn').style.display = 'block';
         }
+        
+        // Show teacher functionality if user is a teacher
+        if (role === 'teacher') {
+          console.log('User is teacher, showing teacher functionality');
+          // Show Create Class button for teachers
+          const createClassBtn = document.getElementById('createClassBtn');
+          if (createClassBtn) {
+            console.log('Making Create Class button visible for teacher');
+            createClassBtn.style.display = 'block';
+          } else {
+            console.error('Create Class button not found in the DOM');
+          }
+          
+          // Add teacher badge to user info
+          const userInfoSection = document.querySelector('.user-info');
+          if (userInfoSection) {
+            const teacherBadge = document.createElement('div');
+            teacherBadge.className = 'role-badge teacher-badge';
+            teacherBadge.textContent = 'Teacher';
+            teacherBadge.style.backgroundColor = '#4CAF50';
+            teacherBadge.style.color = 'white';
+            teacherBadge.style.padding = '3px 8px';
+            teacherBadge.style.borderRadius = '4px';
+            teacherBadge.style.display = 'inline-block';
+            teacherBadge.style.marginTop = '8px';
+            userInfoSection.appendChild(teacherBadge);
+          }
+        }
+        
+        console.log('Returning role:', role);
+        return role;
       } catch (err) {
         console.error('Error checking user role:', err);
         document.getElementById('userRole').textContent = 'Role: Student';
+        return 'student';
       }
     }
     
     // Function to load user's classes
-    async function loadUserClasses(username) {
+    async function loadUserClasses(username, userRole) {
       try {
         const { data: memberships, error } = await supabaseClient
           .from('class_memberships')
@@ -386,17 +602,43 @@
           
           const classCard = document.createElement('div');
           classCard.className = 'class-card';
+          
+          // Check if user is the creator of this class
+          const isCreator = classroom.creator_username === username;
+          
           classCard.innerHTML = `
             <h3>${classroom.class_name}</h3>
             <p>${classroom.description || 'No description'}</p>
             <div class="class-code">Code: ${classroom.class_code}</div>
             ${membership.role === 'admin' ? '<span class="admin-badge">Admin</span>' : ''}
+            ${isCreator ? '<span class="creator-badge">Creator</span>' : ''}
+            ${userRole === 'teacher' ? 
+              `<div class="teacher-controls" style="margin-top: 10px;">
+                <button class="manage-members-btn" style="background-color: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Manage Members</button>
+              </div>` : ''
+            }
           `;
           
           // Add click handler to navigate to class page
-          classCard.addEventListener('click', () => {
+          classCard.addEventListener('click', (e) => {
+            // Don't trigger navigation if clicking on a button
+            if (e.target.tagName === 'BUTTON') {
+              e.stopPropagation();
+              return;
+            }
             window.location.href = `class.html?id=${classroom.id}`;
           });
+          
+          // Add event listeners for teacher controls
+          if (userRole === 'teacher') {
+            const manageBtn = classCard.querySelector('.manage-members-btn');
+            if (manageBtn) {
+              manageBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent class card click
+                window.location.href = `manage-class.html?id=${classroom.id}`;
+              });
+            }
+          }
           
           classesContainer.appendChild(classCard);
         });
