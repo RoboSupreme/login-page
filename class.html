@@ -195,13 +195,188 @@
       color: #757575;
       font-style: italic;
     }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background-color: #fff;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .modal-footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    .form-group input, .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .error-text {
+      color: #d32f2f;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .save-btn {
+      background-color: #4CAF50;
+    }
+    
+    .cancel-btn {
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    
+    /* Member roles styling */
+    .role-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .role-badge.admin {
+      background-color: #ff9800;
+      color: white;
+    }
+    
+    .role-badge.teacher {
+      background-color: #4CAF50;
+      color: white;
+    }
+    
+    .role-badge.student {
+      background-color: #2196F3;
+      color: white;
+    }
+    
+    /* Journal styling */
+    .journal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .journal-card {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      border-left: 5px solid #2196F3;
+    }
+    
+    .journal-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .journal-title {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    
+    .journal-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+    
+    .preview-text {
+      font-size: 0.9rem;
+      color: #555;
+      margin: 10px 0;
+      line-height: 1.4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1 id="className">Class Name</h1>
-      <button id="backBtn" class="button back-btn">Back to Dashboard</button>
+      <div>
+        <button id="backBtn" class="button back-btn">Back to Dashboard</button>
+      </div>
     </div>
     
     <div class="class-info">
@@ -211,8 +386,9 @@
     </div>
     
     <div class="tabs">
-      <div class="tab active" data-tab="journal">Journal Entries</div>
+      <div class="tab active" data-tab="journal">My Journal</div>
       <div class="tab" data-tab="members">Class Members</div>
+      <div class="tab" data-tab="allJournals" style="display: none;">All Student Journals</div>
     </div>
     
     <div id="journalTab" class="tab-content active">
@@ -230,6 +406,28 @@
       </div>
     </div>
     
+    <div id="allJournalsTab" class="tab-content">
+      <div class="tab-header" style="margin-bottom: 20px;">
+        <h2>All Student Journal Entries</h2>
+      </div>
+      <p style="margin-bottom: 15px; color: #666;">As a teacher, you can view all student journal entries for this class.</p>
+      
+      <div style="margin-bottom: 20px;">
+        <label for="studentFilter" style="margin-right: 10px;">Filter by Student:</label>
+        <select id="studentFilter" style="padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+          <option value="all">All Students</option>
+          <!-- Student options will be loaded dynamically -->
+        </select>
+      </div>
+      
+      <div id="allJournalEntriesContainer" class="journal-grid">
+        <div id="emptyAllJournals" class="empty-state">
+          No journal entries found for this class.
+        </div>
+        <!-- All journal entries will be loaded dynamically -->
+      </div>
+    </div>
+    
     <div id="membersTab" class="tab-content">
       <h2>Class Members</h2>
       <ul id="membersList" class="member-list">
@@ -243,6 +441,59 @@
         <h3>Admin Controls</h3>
         <button id="editClassBtn" class="button admin-btn">Edit Class Details</button>
         <button id="manageRolesBtn" class="button admin-btn" style="margin-left: 10px;">Manage Member Roles</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Edit Class Modal -->
+  <div id="editClassModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Class Details</h2>
+        <button class="close-btn" id="closeEditModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editClassName">Class Name</label>
+          <input type="text" id="editClassName" placeholder="Enter class name" required>
+          <div id="nameError" class="error-text">Please enter a valid class name</div>
+        </div>
+        <div class="form-group">
+          <label for="editClassDescription">Description</label>
+          <textarea id="editClassDescription" placeholder="Enter class description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="editClassCode">Class Code</label>
+          <div style="display: flex;">
+            <input type="text" id="editClassCode" placeholder="Class code" readonly style="flex-grow: 1;">
+            <button id="generateNewCodeBtn" class="button" style="margin-left: 10px; background-color: #607d8b;">Generate New</button>
+          </div>
+          <div id="codeError" class="error-text">This code already exists</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelEditBtn" class="button cancel-btn">Cancel</button>
+        <button id="saveClassChangesBtn" class="button save-btn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Manage Roles Modal -->
+  <div id="manageRolesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Manage Member Roles</h2>
+        <button class="close-btn" id="closeRolesModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Set roles for class members below:</p>
+        <div id="rolesMembersList" style="max-height: 400px; overflow-y: auto; margin-top: 15px;">
+          <!-- Members will be loaded here with role selectors -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelRolesBtn" class="button cancel-btn">Cancel</button>
+        <button id="saveRolesBtn" class="button save-btn">Save Changes</button>
       </div>
     </div>
   </div>
@@ -294,6 +545,12 @@
       
       // Setup event listeners
       setupEventListeners();
+      
+      // Set up student filter if teacher/admin
+      const globalRole = localStorage.getItem('musicUserRole');
+      if (userRole === 'admin' || globalRole === 'teacher' || globalRole === 'admin') {
+        setupStudentFilter();
+      }
     });
     
     // Initialize tabs
@@ -367,9 +624,25 @@
         
         userRole = membership.role || 'student';
         
-        // Show admin controls if user is admin
-        if (userRole === 'admin') {
+        // Also get global user role (teacher/admin/student)
+        const { data: profile, profileError } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('username', currentUsername)
+          .single();
+          
+        const globalRole = profile?.role || 'student';
+        console.log('User global role:', globalRole, 'Class role:', userRole);
+        
+        // Show admin controls if user is admin in this class or a teacher/admin globally
+        if (userRole === 'admin' || globalRole === 'teacher' || globalRole === 'admin') {
           document.getElementById('adminControls').style.display = 'block';
+          
+          // Show the All Journals tab for teachers and admins
+          document.querySelector('.tab[data-tab="allJournals"]').style.display = 'block';
+          
+          // If user is a teacher or admin, load all journal entries
+          await loadAllJournalEntries();
         }
       } catch (err) {
         console.error('Error in checkUserRole:', err);
@@ -472,6 +745,10 @@
         // Clear existing members
         membersList.innerHTML = '';
         
+        // Get global role to determine if viewing journals is allowed
+        const globalRole = localStorage.getItem('musicUserRole');
+        const canViewStudentJournals = (userRole === 'admin' || globalRole === 'teacher' || globalRole === 'admin');
+        
         // Create list items for each member
         members.forEach(member => {
           const item = document.createElement('li');
@@ -480,9 +757,17 @@
           // Format join date
           const joinDate = new Date(member.joined_at).toLocaleDateString();
           
+          // Create the username element - make it clickable for teachers/admins
+          let usernameHtml = '';
+          if (canViewStudentJournals && member.username !== currentUsername) {
+            usernameHtml = `<strong class="student-name-link" data-username="${member.username}">${member.username}</strong>`;
+          } else {
+            usernameHtml = `<strong>${member.username}</strong>`;
+          }
+          
           item.innerHTML = `
             <div>
-              <strong>${member.username}</strong>
+              ${usernameHtml}
               <div style="font-size: 0.8rem; color: #757575;">Joined: ${joinDate}</div>
             </div>
             <span class="member-role ${member.role === 'admin' ? 'admin' : ''}">${
@@ -492,8 +777,122 @@
           
           membersList.appendChild(item);
         });
+        
+        // Add click handlers for student names
+        if (canViewStudentJournals) {
+          document.querySelectorAll('.student-name-link').forEach(link => {
+            link.style.cursor = 'pointer';
+            link.style.color = '#2196F3';
+            link.title = 'Click to view this student\'s journal';
+            
+            link.addEventListener('click', () => {
+              const studentUsername = link.getAttribute('data-username');
+              viewStudentJournal(studentUsername);
+            });
+          });
+        }
       } catch (err) {
         console.error('Error in loadClassMembers:', err);
+      }
+    }
+    
+    // View a specific student's journal
+    async function viewStudentJournal(username) {
+      try {
+        console.log(`Viewing journal for student: ${username}`);
+        
+        // Get the student's journal entries
+        const { data: entries, error } = await supabaseClient
+          .from('journal_entries')
+          .select('*')
+          .eq('username', username)
+          .eq('class_id', classId)
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error(`Error loading journal entries for ${username}:`, error);
+          alert(`Could not load journal entries for ${username}. Please try again.`);
+          return;
+        }
+        
+        // Create a modal to display the student's journal
+        const modalHtml = `
+          <div id="studentJournalModal" class="modal active">
+            <div class="modal-content" style="width: 90%; max-width: 800px;">
+              <div class="modal-header">
+                <h2>${username}'s Journal Entries</h2>
+                <button class="close-btn" id="closeStudentJournalModal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <p>Viewing journal entries for ${username} in this class.</p>
+                <div id="studentJournalEntries" class="journal-grid" style="margin-top: 20px;">
+                  ${entries && entries.length > 0 ? '' : `<div class="empty-state">No journal entries found for ${username} in this class.</div>`}
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button id="closeStudentJournalBtn" class="button cancel-btn">Close</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Add the modal to the page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Add event listeners for closing the modal
+        document.getElementById('closeStudentJournalModal').addEventListener('click', () => {
+          document.getElementById('studentJournalModal').remove();
+        });
+        
+        document.getElementById('closeStudentJournalBtn').addEventListener('click', () => {
+          document.getElementById('studentJournalModal').remove();
+        });
+        
+        // If there are entries, add them to the modal
+        if (entries && entries.length > 0) {
+          const container = document.getElementById('studentJournalEntries');
+          
+          entries.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = 'journal-card';
+            
+            // Format date
+            const createdDate = new Date(entry.created_at).toLocaleDateString();
+            
+            // Add content or preview based on entry type
+            let contentPreview = '';
+            if (entry.content) {
+              // Show a snippet of content if available
+              contentPreview = `<p class="preview-text">${entry.content.substring(0, 100)}${entry.content.length > 100 ? '...' : ''}</p>`;
+            } else if (entry.link) {
+              contentPreview = `<p class="preview-text">External link: ${entry.link}</p>`;
+            }
+            
+            card.innerHTML = `
+              <h3 class="journal-title">${entry.title}</h3>
+              <p>Type: ${entry.entry_type || 'N/A'}</p>
+              ${contentPreview}
+              <div class="journal-meta">
+                <span>Added: ${createdDate}</span>
+              </div>
+            `;
+            
+            // Style the card
+            card.style.borderLeft = `5px solid ${stringToColor(username)}`;
+            
+            // Add click handler to open the entry
+            card.addEventListener('click', () => {
+              if (entry.link) {
+                window.open(entry.link, '_blank');
+              }
+            });
+            
+            container.appendChild(card);
+          });
+        }
+      } catch (err) {
+        console.error(`Error in viewStudentJournal for ${username}:`, err);
+        alert('An unexpected error occurred. Please try again.');
       }
     }
     
@@ -513,15 +912,418 @@
       const editClassBtn = document.getElementById('editClassBtn');
       if (editClassBtn) {
         editClassBtn.addEventListener('click', () => {
-          alert('Edit class functionality is coming soon!');
+          showEditClassModal();
         });
       }
       
       const manageRolesBtn = document.getElementById('manageRolesBtn');
       if (manageRolesBtn) {
         manageRolesBtn.addEventListener('click', () => {
-          alert('Manage roles functionality is coming soon!');
+          showManageRolesModal();
         });
+      }
+      
+      // Edit class modal events
+      document.getElementById('closeEditModal').addEventListener('click', () => {
+        document.getElementById('editClassModal').classList.remove('active');
+      });
+      
+      document.getElementById('cancelEditBtn').addEventListener('click', () => {
+        document.getElementById('editClassModal').classList.remove('active');
+      });
+      
+      document.getElementById('generateNewCodeBtn').addEventListener('click', () => {
+        generateRandomClassCode();
+      });
+      
+      document.getElementById('saveClassChangesBtn').addEventListener('click', async () => {
+        await saveClassChanges();
+      });
+      
+      // Manage roles modal events
+      document.getElementById('closeRolesModal').addEventListener('click', () => {
+        document.getElementById('manageRolesModal').classList.remove('active');
+      });
+      
+      document.getElementById('cancelRolesBtn').addEventListener('click', () => {
+        document.getElementById('manageRolesModal').classList.remove('active');
+      });
+      
+      document.getElementById('saveRolesBtn').addEventListener('click', async () => {
+        await saveRoleChanges();
+      });
+    }
+    
+    // Show edit class modal and populate with current data
+    function showEditClassModal() {
+      // Set current values in the form
+      document.getElementById('editClassName').value = classData.class_name;
+      document.getElementById('editClassDescription').value = classData.description || '';
+      document.getElementById('editClassCode').value = classData.class_code;
+      
+      // Clear any error messages
+      document.getElementById('nameError').style.display = 'none';
+      document.getElementById('codeError').style.display = 'none';
+      
+      // Show the modal
+      document.getElementById('editClassModal').classList.add('active');
+    }
+    
+    // Generate a random class code
+    function generateRandomClassCode() {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let result = '';
+      const length = 6;
+      
+      for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      
+      document.getElementById('editClassCode').value = result;
+      document.getElementById('codeError').style.display = 'none';
+    }
+    
+    // Save class changes
+    async function saveClassChanges() {
+      const newClassName = document.getElementById('editClassName').value.trim();
+      const newDescription = document.getElementById('editClassDescription').value.trim();
+      const newClassCode = document.getElementById('editClassCode').value.trim();
+      
+      // Validate inputs
+      let hasError = false;
+      
+      if (!newClassName) {
+        document.getElementById('nameError').style.display = 'block';
+        hasError = true;
+      } else {
+        document.getElementById('nameError').style.display = 'none';
+      }
+      
+      // Only check for code uniqueness if the code has changed
+      if (newClassCode !== classData.class_code) {
+        try {
+          const { data: existingClass, error } = await supabaseClient
+            .from('classrooms')
+            .select('id')
+            .eq('class_code', newClassCode);
+            
+          if (!error && existingClass && existingClass.length > 0) {
+            document.getElementById('codeError').style.display = 'block';
+            hasError = true;
+          } else {
+            document.getElementById('codeError').style.display = 'none';
+          }
+        } catch (err) {
+          console.error('Error checking class code:', err);
+          alert('Error checking class code. Please try again.');
+          return;
+        }
+      }
+      
+      if (hasError) {
+        return;
+      }
+      
+      // Update the class in the database
+      try {
+        const { data, error } = await supabaseClient
+          .from('classrooms')
+          .update({
+            class_name: newClassName,
+            description: newDescription,
+            class_code: newClassCode
+          })
+          .eq('id', classId);
+          
+        if (error) {
+          console.error('Error updating class:', error);
+          alert('Failed to update class. Please try again.');
+          return;
+        }
+        
+        // Update local data
+        classData.class_name = newClassName;
+        classData.description = newDescription;
+        classData.class_code = newClassCode;
+        
+        // Update UI
+        document.getElementById('className').textContent = newClassName;
+        document.getElementById('classDescription').textContent = newDescription || 'No description available.';
+        document.getElementById('classCode').textContent = `Code: ${newClassCode}`;
+        
+        // Update page title
+        document.title = `${newClassName} - Music Journal`;
+        
+        // Close the modal
+        document.getElementById('editClassModal').classList.remove('active');
+        
+        alert('Class details updated successfully!');
+      } catch (err) {
+        console.error('Error in saveClassChanges:', err);
+        alert('An unexpected error occurred. Please try again.');
+      }
+    }
+    
+    // Show manage roles modal and load members
+    async function showManageRolesModal() {
+      try {
+        // Get all members for this class
+        const { data: members, error } = await supabaseClient
+          .from('class_memberships')
+          .select('username, role')
+          .eq('class_id', classId);
+          
+        if (error) {
+          console.error('Error loading members for role management:', error);
+          alert('Failed to load class members. Please try again.');
+          return;
+        }
+        
+        const membersList = document.getElementById('rolesMembersList');
+        membersList.innerHTML = '';
+        
+        if (!members || members.length === 0) {
+          membersList.innerHTML = '<div class="empty-state">No members found in this class.</div>';
+        } else {
+          // Create UI for each member
+          members.forEach(member => {
+            const memberItem = document.createElement('div');
+            memberItem.className = 'member-role-item';
+            memberItem.style.display = 'flex';
+            memberItem.style.justifyContent = 'space-between';
+            memberItem.style.alignItems = 'center';
+            memberItem.style.padding = '10px';
+            memberItem.style.borderBottom = '1px solid #eee';
+            
+            // Create a select dropdown for role
+            const roleSelect = document.createElement('select');
+            roleSelect.dataset.username = member.username;
+            roleSelect.className = 'role-select';
+            roleSelect.style.padding = '5px';
+            roleSelect.style.borderRadius = '4px';
+            
+            // Add options
+            const studentOption = document.createElement('option');
+            studentOption.value = 'student';
+            studentOption.textContent = 'Student';
+            roleSelect.appendChild(studentOption);
+            
+            const adminOption = document.createElement('option');
+            adminOption.value = 'admin';
+            adminOption.textContent = 'Admin';
+            roleSelect.appendChild(adminOption);
+            
+            // Set current role
+            roleSelect.value = member.role;
+            
+            // Create the member item UI
+            memberItem.innerHTML = `
+              <div style="font-weight: 500;">${member.username}</div>
+            `;
+            memberItem.appendChild(roleSelect);
+            
+            membersList.appendChild(memberItem);
+          });
+        }
+        
+        // Show the modal
+        document.getElementById('manageRolesModal').classList.add('active');
+      } catch (err) {
+        console.error('Error in showManageRolesModal:', err);
+        alert('An unexpected error occurred. Please try again.');
+      }
+    }
+        // Save role changes
+    async function saveRoleChanges() {
+      try {
+        const roleSelects = document.querySelectorAll('.role-select');
+        const updates = [];
+        
+        roleSelects.forEach(select => {
+          updates.push({
+            username: select.dataset.username,
+            role: select.value
+          });
+        });
+        
+        // Update each member's role
+        for (const update of updates) {
+          const { error } = await supabaseClient
+            .from('class_memberships')
+            .update({ role: update.role })
+            .eq('class_id', classId)
+            .eq('username', update.username);
+            
+          if (error) {
+            console.error(`Error updating role for ${update.username}:`, error);
+          }
+        }
+        
+        // Close the modal
+        document.getElementById('manageRolesModal').classList.remove('active');
+        
+        // Refresh the members list
+        await loadClassMembers();
+        
+        alert('Member roles updated successfully!');
+      } catch (err) {
+        console.error('Error in saveRoleChanges:', err);
+        alert('An unexpected error occurred. Please try again.');
+      }
+    }
+    
+    // Load all journal entries for the class (teacher view)
+    async function loadAllJournalEntries(filterUsername = 'all') {
+      try {
+        console.log('Loading all journal entries, filter by:', filterUsername);
+        
+        // Get all entries for this class, filtered by username if needed
+        let query = supabaseClient
+          .from('journal_entries')
+          .select('*')
+          .eq('class_id', classId)
+          .order('created_at', { ascending: false });
+          
+        // Apply username filter if not 'all'
+        if (filterUsername !== 'all') {
+          query = query.eq('username', filterUsername);
+        }
+        
+        const { data: entries, error } = await query;
+          
+        if (error) {
+          console.error('Error loading all journal entries:', error);
+          return;
+        }
+        
+        console.log('Retrieved entries:', entries?.length || 0);
+        
+        const entriesContainer = document.getElementById('allJournalEntriesContainer');
+        const emptyState = document.getElementById('emptyAllJournals');
+        
+        if (!entries || entries.length === 0) {
+          emptyState.textContent = filterUsername === 'all' 
+            ? 'No journal entries found for this class.'
+            : `No journal entries found for student ${filterUsername}.`;
+          emptyState.style.display = 'block';
+          entriesContainer.innerHTML = '';
+          return;
+        }
+        
+        emptyState.style.display = 'none';
+        
+        // Clear any existing entries
+        entriesContainer.innerHTML = '';
+        
+        // Create cards for each entry
+        entries.forEach(entry => {
+          const card = document.createElement('div');
+          card.className = 'journal-card';
+          
+          // Format date
+          const createdDate = new Date(entry.created_at).toLocaleDateString();
+          
+          // Add content or preview based on entry type
+          let contentPreview = '';
+          if (entry.content) {
+            // Show a snippet of content if available
+            contentPreview = `<p class="preview-text">${entry.content.substring(0, 100)}${entry.content.length > 100 ? '...' : ''}</p>`;
+          } else if (entry.link) {
+            contentPreview = `<p class="preview-text">External link: ${entry.link}</p>`;
+          }
+          
+          card.innerHTML = `
+            <h3 class="journal-title">${entry.title}</h3>
+            <p>Type: ${entry.entry_type || 'N/A'}</p>
+            ${contentPreview}
+            <div class="journal-meta">
+              <span>By: <strong class="student-name-link" data-username="${entry.username}">${entry.username}</strong></span>
+              <span>Added: ${createdDate}</span>
+            </div>
+          `;
+          
+          // Style the card with a border color based on username
+          card.style.borderLeft = `5px solid ${stringToColor(entry.username)}`;
+          
+          // Add click handler to open the entry content when clicking on the card
+          card.addEventListener('click', (e) => {
+            // Don't handle card click if they clicked on the student name
+            if (!e.target.classList.contains('student-name-link')) {
+              if (entry.link) {
+                window.open(entry.link, '_blank');
+              }
+            }
+          });
+          
+          entriesContainer.appendChild(card);
+        });
+        
+        // Add click handlers for student names in entries
+        document.querySelectorAll('#allJournalEntriesContainer .student-name-link').forEach(link => {
+          link.style.cursor = 'pointer';
+          link.style.color = '#2196F3';
+          link.title = 'Click to view this student\'s journal';
+          
+          link.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent the card click event from firing
+            const studentUsername = link.getAttribute('data-username');
+            viewStudentJournal(studentUsername);
+          });
+        });
+      } catch (err) {
+        console.error('Error in loadAllJournalEntries:', err);
+      }
+    }
+    
+    // Helper function to generate a color from a string (username)
+    function stringToColor(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      let color = '#';
+      for (let i = 0; i < 3; i++) {
+        const value = (hash >> (i * 8)) & 0xFF;
+        color += ('00' + value.toString(16)).substr(-2);
+      }
+      return color;
+    }
+    
+    // Setup student filter dropdown
+    async function setupStudentFilter() {
+      try {
+        // Get all members for this class
+        const { data: members, error } = await supabaseClient
+          .from('class_memberships')
+          .select('username')
+          .eq('class_id', classId);
+          
+        if (error) {
+          console.error('Error loading members for filter:', error);
+          return;
+        }
+        
+        const studentFilter = document.getElementById('studentFilter');
+        
+        // Clear existing options except the 'All Students' option
+        while (studentFilter.options.length > 1) {
+          studentFilter.remove(1);
+        }
+        
+        // Add each member as an option
+        members.forEach(member => {
+          const option = document.createElement('option');
+          option.value = member.username;
+          option.textContent = member.username;
+          studentFilter.appendChild(option);
+        });
+        
+        // Add change event listener
+        studentFilter.addEventListener('change', event => {
+          loadAllJournalEntries(event.target.value);
+        });
+      } catch (err) {
+        console.error('Error in setupStudentFilter:', err);
       }
     }
   </script>
