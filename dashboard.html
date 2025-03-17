@@ -6,17 +6,43 @@
   <title>Dashboard</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      line-height: 1.6;
+      padding: 20px;
+      color: #2d3748;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
     .dashboard-container {
+      position: relative;
+      z-index: 1;
       padding: 30px;
       max-width: 1200px;
-      margin: 0 auto;
+      margin: 20px auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(5px);
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     .welcome-header {
-      margin-bottom: 20px;
-      color: #4CAF50;
+      margin-bottom: 30px;
+      color: #2d3748;
       text-align: center;
+      font-size: 2.2em;
+      font-weight: 600;
     }
     
     .dashboard-layout {
@@ -26,10 +52,11 @@
     }
     
     .sidebar {
-      background-color: #f9f9f9;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
     }
     
     .user-info {
@@ -37,10 +64,12 @@
     }
     
     .user-info h2 {
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-      font-size: 1.3rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      color: #4a5568;
+      font-weight: 500;
     }
     
     .join-class {
@@ -48,25 +77,37 @@
     }
     
     .join-class h2 {
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-      font-size: 1.3rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+      color: #4a5568;
+      font-weight: 500;
     }
     
     .join-class input {
       width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .join-class input:focus {
+      border-color: #667eea;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
     }
     
     .main-content {
-      background-color: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
     }
     
     .classes-grid {
@@ -76,29 +117,36 @@
     }
     
     .class-card {
-      background-color: #f0f8ff;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
+      background-color: rgba(240, 248, 255, 0.9);
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
       cursor: pointer;
+      border-left: 5px solid #667eea;
     }
     
     .class-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      border-left: 5px solid #764ba2;
     }
     
     .class-card h3 {
       margin-top: 0;
-      color: #2196F3;
+      margin-bottom: 10px;
+      color: #2d3748;
+      font-weight: 600;
     }
     
     .class-code {
       background-color: #e3f2fd;
       display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: 500;
+      color: #2196F3;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       font-size: 0.8rem;
       margin-top: 10px;
     }
@@ -112,38 +160,52 @@
     
     .button {
       border: none;
-      padding: 10px 15px;
-      border-radius: 4px;
+      padding: 12px 20px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 16px;
+      font-weight: 500;
       color: white;
       width: 100%;
-      margin-bottom: 10px;
-      transition: background-color 0.2s;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     .join-btn {
       background-color: #4CAF50;
+      background-image: linear-gradient(135deg, #4CAF50, #2e7d32);
     }
     
     .join-btn:hover {
       background-color: #3e8e41;
+      background-image: linear-gradient(135deg, #3e8e41, #1b5e20);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .journal-btn {
       background-color: #2196F3;
+      background-image: linear-gradient(135deg, #2196F3, #0d47a1);
     }
     
     .journal-btn:hover {
       background-color: #0b7dda;
+      background-image: linear-gradient(135deg, #0b7dda, #01579b);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .logout-btn {
       background-color: #f44336;
+      background-image: linear-gradient(135deg, #f44336, #b71c1c);
     }
     
     .logout-btn:hover {
       background-color: #d32f2f;
+      background-image: linear-gradient(135deg, #d32f2f, #7f0000);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .admin-section {
@@ -155,10 +217,117 @@
     
     .create-class-btn {
       background-color: #ff9800;
+      background-image: linear-gradient(135deg, #ff9800, #e65100);
     }
     
     .create-class-btn:hover {
       background-color: #e68a00;
+      background-image: linear-gradient(135deg, #e68a00, #d84315);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Background slider styles */
+    .background-slider {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .slider-img {
+      position: absolute;
+      height: 100%;
+      width: auto;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .slide-left {
+      animation: slideLeft 10s linear;
+    }
+    
+    .slide-right {
+      animation: slideRight 10s linear;
+    }
+    
+    .slide-top {
+      animation: slideTop 10s linear;
+    }
+    
+    .slide-bottom {
+      animation: slideBottom 10s linear;
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+    
+    @keyframes slideRight {
+      0% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+    }
+    
+    @keyframes slideTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+    
+    @keyframes slideBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
     }
     
     @media (max-width: 768px) {
@@ -169,6 +338,11 @@
   </style>
 </head>
 <body>
+  <div class="background-slider">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/1zoJojJNyF1E5MIK?optimizer=image&width=1536" alt="HKIS Image 1" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/z1YVNy0F7IhP5kmv?optimizer=image&width=1536" alt="HKIS Image 2" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/OUXtie6rUc4St9ea?optimizer=image&width=1536" alt="HKIS Image 3" class="slider-img">
+  </div>
   <div class="dashboard-container">
     <h1 class="welcome-header">Welcome to Your Music Journal</h1>
     
@@ -251,6 +425,40 @@
       'https://xtwamtfxirypcxszldow.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
     );
+    
+    // Initialize background slider animation
+    function initBackgroundSlider() {
+      const images = document.querySelectorAll('.slider-img');
+      if (images.length === 0) return;
+      
+      const directions = ['slide-left', 'slide-right', 'slide-top', 'slide-bottom'];
+      let currentImageIndex = 0;
+      
+      function animateNextImage() {
+        // Remove animation from all images
+        images.forEach(img => {
+          img.classList.remove(...directions);
+          img.style.opacity = 0;
+        });
+        
+        // Get the next direction randomly
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        
+        // Show and animate next image
+        const img = images[currentImageIndex];
+        img.classList.add(direction);
+        
+        // Move to next image, loop back to start if at the end
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        
+        // Wait for animation to finish, then do the next one
+        setTimeout(animateNextImage, 10000); // 10 seconds
+      }
+      
+      // Start animation sequence
+      console.log('Starting background animation');
+      animateNextImage();
+    }
     
     document.addEventListener('DOMContentLoaded', async () => {
       // Check if there's an auth token in the URL (from email confirmation)
@@ -373,6 +581,9 @@
         document.getElementById('classCode').value = result;
         document.getElementById('codeError').textContent = '';
       }
+      
+      // Initialize background slider
+      initBackgroundSlider();
       
       // Setup generate code button
       if (generateCodeBtn) {

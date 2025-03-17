@@ -6,82 +6,112 @@
   <title>Class View</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
+    * {
       margin: 0;
       padding: 0;
-      color: #333;
-      background-color: #f5f5f5;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+      color: #2d3748;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
     }
     
     .container {
+      position: relative;
+      z-index: 1;
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
+      margin: 20px auto;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(5px);
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #ddd;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
     
     .class-info {
-      background-color: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .class-info:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
     
     .class-code {
       display: inline-block;
       background-color: #e3f2fd;
-      padding: 4px 10px;
-      border-radius: 4px;
+      padding: 8px 15px;
+      border-radius: 8px;
       font-size: 0.9rem;
-      margin-top: 10px;
+      margin-top: 15px;
+      font-weight: 500;
+      color: #2196F3;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
     
     .tabs {
       display: flex;
-      margin-bottom: 20px;
-      background-color: #fff;
-      border-radius: 8px;
+      margin-bottom: 30px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
     .tab {
-      padding: 12px 20px;
+      padding: 15px 25px;
       cursor: pointer;
-      background-color: #f0f0f0;
-      transition: background-color 0.2s;
+      background-color: rgba(240, 240, 240, 0.7);
+      transition: all 0.3s ease;
       flex: 1;
       text-align: center;
       font-weight: 500;
+      color: #4a5568;
     }
     
     .tab.active {
-      background-color: #2196F3;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
     
     .tab:hover:not(.active) {
-      background-color: #e0e0e0;
+      background-color: rgba(224, 224, 224, 0.9);
+      transform: translateY(-2px);
     }
     
     .tab-content {
       display: none;
-      padding: 20px;
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 25px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
     }
     
     .tab-content.active {
@@ -89,13 +119,21 @@
     }
     
     .button {
-      padding: 10px 15px;
+      padding: 12px 20px;
       border: none;
-      border-radius: 4px;
+      border-radius: 10px;
       color: white;
       cursor: pointer;
       font-size: 16px;
-      transition: background-color 0.2s;
+      font-weight: 500;
+      background: #667eea;
+      transition: all 0.3s ease;
+    }
+    
+    .button:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .back-btn {
@@ -104,6 +142,8 @@
     
     .back-btn:hover {
       background-color: #616161;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .add-btn {
@@ -112,6 +152,8 @@
     
     .add-btn:hover {
       background-color: #3e8e41;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .admin-btn {
@@ -368,9 +410,138 @@
       line-clamp: 3;
       -webkit-box-orient: vertical;
     }
+    
+    /* Background slider styles */
+    .background-slider {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .slider-img {
+      position: absolute;
+      height: 100%;
+      width: auto;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .slide-left {
+      animation: slideLeft 10s linear;
+    }
+    
+    .slide-right {
+      animation: slideRight 10s linear;
+    }
+    
+    .slide-top {
+      animation: slideTop 10s linear;
+    }
+    
+    .slide-bottom {
+      animation: slideBottom 10s linear;
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+    
+    @keyframes slideRight {
+      0% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+    }
+    
+    @keyframes slideTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+    
+    @keyframes slideBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+    }
+    
+    /* Header styles */
+    h1 {
+      color: #2d3748;
+      margin-bottom: 20px;
+      font-size: 2.2em;
+      font-weight: 600;
+    }
+    
+    h2 {
+      color: #4a5568;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      font-weight: 500;
+    }
+    
+    h3 {
+      color: #2d3748;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
+  <div class="background-slider">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/1zoJojJNyF1E5MIK?optimizer=image&width=1536" alt="HKIS Image 1" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/z1YVNy0F7IhP5kmv?optimizer=image&width=1536" alt="HKIS Image 2" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/OUXtie6rUc4St9ea?optimizer=image&width=1536" alt="HKIS Image 3" class="slider-img">
+  </div>
   <div class="container">
     <div class="header">
       <h1 id="className">Class Name</h1>
@@ -551,6 +722,9 @@
       if (userRole === 'admin' || globalRole === 'teacher' || globalRole === 'admin') {
         setupStudentFilter();
       }
+      
+      // Initialize background slider
+      initBackgroundSlider();
     });
     
     // Initialize tabs
@@ -894,6 +1068,40 @@
         console.error(`Error in viewStudentJournal for ${username}:`, err);
         alert('An unexpected error occurred. Please try again.');
       }
+    }
+    
+    // Initialize background slider animation
+    function initBackgroundSlider() {
+      const images = document.querySelectorAll('.slider-img');
+      if (images.length === 0) return;
+      
+      const directions = ['slide-left', 'slide-right', 'slide-top', 'slide-bottom'];
+      let currentImageIndex = 0;
+      
+      function animateNextImage() {
+        // Remove animation from all images
+        images.forEach(img => {
+          img.classList.remove(...directions);
+          img.style.opacity = 0;
+        });
+        
+        // Get the next direction randomly
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        
+        // Show and animate next image
+        const img = images[currentImageIndex];
+        img.classList.add(direction);
+        
+        // Move to next image, loop back to start if at the end
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        
+        // Wait for animation to finish, then do the next one
+        setTimeout(animateNextImage, 10000); // 10 seconds
+      }
+      
+      // Start animation sequence
+      console.log('Starting background animation');
+      animateNextImage();
     }
     
     // Setup event listeners
