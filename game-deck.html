@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Journal - Deck Building</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      line-height: 1.6;
+      padding: 20px;
+      color: #2d3748;
+    }
+    
+    .background-slider {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .slider-img {
+      position: absolute;
+      height: 100%;
+      width: auto;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .slide-left {
+      animation: slideLeft 10s linear;
+    }
+    
+    .slide-right {
+      animation: slideRight 10s linear;
+    }
+    
+    .slide-top {
+      animation: slideTop 10s linear;
+    }
+    
+    .slide-bottom {
+      animation: slideBottom 10s linear;
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+    
+    @keyframes slideRight {
+      0% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+    }
+    
+    @keyframes slideTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+    
+    @keyframes slideBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(5px);
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    h1 {
+      color: #2d3748;
+      font-size: 2.2em;
+      font-weight: 600;
+    }
+    
+    h2 {
+      color: #4a5568;
+      font-size: 1.5em;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    
+    .button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-image: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      background-image: linear-gradient(135deg, #764ba2, #667eea);
+    }
+    
+    .back-button {
+      background-image: linear-gradient(135deg, #757575, #424242);
+    }
+    
+    .back-button:hover {
+      background-image: linear-gradient(135deg, #424242, #757575);
+    }
+    
+    .game-currency {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #FFD700, #FFA000);
+      padding: 8px 15px;
+      border-radius: 25px;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-currency span {
+      margin-left: 8px;
+    }
+    
+    .section-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .character-card {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .character-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .character-card h3 {
+      color: #2d3748;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    
+    .stats {
+      font-size: 0.9rem;
+    }
+    
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .selected {
+      border: 2px solid #4CAF50;
+      background: rgba(76, 175, 80, 0.1);
+    }
+    
+    .active-team {
+      background: rgba(102, 126, 234, 0.1);
+      border: 2px solid #667eea;
+    }
+    
+    .character-action {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      text-align: center;
+      line-height: 24px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+    
+    .character-action:hover {
+      background: #667eea;
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .team-section {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    
+    .team-slot {
+      flex: 1;
+      min-width: 150px;
+      height: 100px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      border: 2px dashed rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+    }
+    
+    .team-slot.filled {
+      background: rgba(102, 126, 234, 0.1);
+      border: 2px solid rgba(102, 126, 234, 0.3);
+    }
+    
+    .team-slot:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    
+    .character-type {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+      color: white;
+      font-weight: 500;
+    }
+    
+    .type-support {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    }
+    
+    .type-attacker {
+      background: linear-gradient(135deg, #F44336, #C62828);
+    }
+    
+    .type-defender {
+      background: linear-gradient(135deg, #2196F3, #1565C0);
+    }
+    
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .team-section {
+        flex-direction: column;
+      }
+      
+      .character-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .section-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-slider">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/1zoJojJNyF1E5MIK?optimizer=image&width=1536" alt="HKIS Image 1" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/z1YVNy0F7IhP5kmv?optimizer=image&width=1536" alt="HKIS Image 2" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/OUXtie6rUc4St9ea?optimizer=image&width=1536" alt="HKIS Image 3" class="slider-img">
+  </div>
+  
+  <div class="container">
+    <header>
+      <h1>Deck Building</h1>
+      <div style="display: flex; gap: 15px;">
+        <div class="game-currency">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="6" x2="12" y2="12"></line>
+            <line x1="12" y1="12" x2="16" y2="16"></line>
+          </svg>
+          <span id="currency-amount">1000</span>
+        </div>
+        <button class="button back-button" id="back-to-hub">Back to Game Hub</button>
+      </div>
+    </header>
+    
+    <div class="card">
+      <h2>Active Team</h2>
+      <p>These characters will be available in battle. Select up to 3 characters.</p>
+      
+      <div class="team-section" id="active-team">
+        <div class="team-slot" id="team-slot-1">
+          <span>Empty Slot</span>
+        </div>
+        <div class="team-slot" id="team-slot-2">
+          <span>Empty Slot</span>
+        </div>
+        <div class="team-slot" id="team-slot-3">
+          <span>Empty Slot</span>
+        </div>
+      </div>
+      
+      <div class="section-buttons">
+        <button class="button" id="save-team">Save Team</button>
+        <button class="button" id="clear-team">Clear Team</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Your Collection</h2>
+      <p>Select characters to add to your active team.</p>
+      
+      <div class="character-grid" id="character-collection">
+        <!-- Character collection will be displayed here -->
+      </div>
+    </div>
+    
+    <div class="nav-buttons">
+      <button class="button" id="go-to-collection">Go to Collection</button>
+      <button class="button" id="go-to-battle">Go to Battle</button>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Supabase client (using the same as your main app)
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    // Game state
+    let gameState = {
+      currency: 1000,
+      playerCharacters: [],
+      activeTeam: []
+    };
+    
+    // Load game state from localStorage
+    function loadGameState() {
+      const savedState = localStorage.getItem('gameState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        gameState.currency = parsedState.currency || 1000;
+        gameState.playerCharacters = parsedState.playerCharacters || [];
+        gameState.activeTeam = parsedState.activeTeam || [];
+        
+        // Update UI
+        document.getElementById('currency-amount').textContent = gameState.currency;
+        updateCharacterCollection();
+        updateTeamDisplay();
+      }
+    }
+    
+    // Save game state to localStorage
+    function saveGameState() {
+      const stateToSave = {
+        currency: gameState.currency,
+        playerCharacters: gameState.playerCharacters,
+        activeTeam: gameState.activeTeam
+      };
+      
+      localStorage.setItem('gameState', JSON.stringify(stateToSave));
+    }
+    
+    // Initialize background slider animation
+    function initBackgroundSlider() {
+      const images = document.querySelectorAll('.slider-img');
+      if (images.length === 0) return;
+      
+      const directions = ['slide-left', 'slide-right', 'slide-top', 'slide-bottom'];
+      let currentImageIndex = 0;
+      
+      function animateNextImage() {
+        // Remove animation from all images
+        images.forEach(img => {
+          img.classList.remove(...directions);
+          img.style.opacity = 0;
+        });
+        
+        // Get the next direction randomly
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        
+        // Show and animate next image
+        const img = images[currentImageIndex];
+        img.classList.add(direction);
+        
+        // Move to next image, loop back to start if at the end
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        
+        // Wait for animation to finish, then do the next one
+        setTimeout(animateNextImage, 10000); // 10 seconds
+      }
+      
+      // Start animation sequence
+      console.log('Starting background animation');
+      animateNextImage();
+    }
+    
+    // Update team display
+    function updateTeamDisplay() {
+      // Clear team slots
+      for (let i = 1; i <= 3; i++) {
+        const slot = document.getElementById(`team-slot-${i}`);
+        slot.innerHTML = '<span>Empty Slot</span>';
+        slot.classList.remove('filled');
+      }
+      
+      // Fill team slots with active team members
+      gameState.activeTeam.forEach((charId, index) => {
+        if (index >= 3) return; // Only 3 slots available
+        
+        // Find character by ID
+        const character = gameState.playerCharacters.find(c => c.id == charId);
+        if (!character) return;
+        
+        const slot = document.getElementById(`team-slot-${index + 1}`);
+        slot.innerHTML = `
+          <div>
+            <h3>${character.name}</h3>
+            <span class="character-type type-${character.type.toLowerCase()}">${character.type}</span>
+          </div>
+        `;
+        slot.classList.add('filled');
+        
+        // Add remove button
+        const removeBtn = document.createElement('div');
+        removeBtn.className = 'character-action';
+        removeBtn.textContent = 'x';
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeFromTeam(character.id);
+        });
+        
+        slot.appendChild(removeBtn);
+      });
+      
+      // Highlight active team members in the collection
+      updateCharacterCollection();
+    }
+    
+    // Add character to active team
+    function addToTeam(characterId) {
+      // Check if team is already full
+      if (gameState.activeTeam.length >= 3) {
+        alert('Team is already full! Remove a character before adding a new one.');
+        return;
+      }
+      
+      // Check if character is already in team
+      if (gameState.activeTeam.includes(characterId)) {
+        return;
+      }
+      
+      // Add to team
+      gameState.activeTeam.push(characterId);
+      
+      // Update displays
+      updateTeamDisplay();
+    }
+    
+    // Remove character from active team
+    function removeFromTeam(characterId) {
+      // Find index of character in team
+      const index = gameState.activeTeam.indexOf(characterId);
+      if (index === -1) return;
+      
+      // Remove from team
+      gameState.activeTeam.splice(index, 1);
+      
+      // Update displays
+      updateTeamDisplay();
+    }
+    
+    // Update character collection display
+    function updateCharacterCollection() {
+      const container = document.getElementById('character-collection');
+      container.innerHTML = '';
+      
+      if (gameState.playerCharacters.length === 0) {
+        container.innerHTML = '<p>No characters yet. Visit the Collection page to get characters!</p>';
+        return;
+      }
+      
+      gameState.playerCharacters.forEach(char => {
+        const card = document.createElement('div');
+        card.className = 'character-card';
+        
+        // Check if this character is in the active team
+        if (gameState.activeTeam.includes(char.id)) {
+          card.classList.add('active-team');
+        }
+        
+        // Set type-specific class
+        const typeClass = `type-${char.type.toLowerCase()}`;
+        
+        card.innerHTML = `
+          <span class="character-type ${typeClass}">${char.type}</span>
+          <h3>${char.name}</h3>
+          <div class="stats">
+            <div class="stat">
+              <span>Max Energy:</span>
+              <span>${char.maxEnergy}</span>
+            </div>
+            <div class="stat">
+              <span>Energy Regen:</span>
+              <span>${char.regenAmount} / ${char.regenRate}s</span>
+            </div>
+          </div>
+        `;
+        
+        // Add action button based on whether character is in team
+        const actionBtn = document.createElement('div');
+        actionBtn.className = 'character-action';
+        
+        if (gameState.activeTeam.includes(char.id)) {
+          actionBtn.textContent = '-';
+          actionBtn.title = 'Remove from team';
+          actionBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            removeFromTeam(char.id);
+          });
+        } else {
+          actionBtn.textContent = '+';
+          actionBtn.title = 'Add to team';
+          actionBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            addToTeam(char.id);
+          });
+        }
+        
+        card.appendChild(actionBtn);
+        
+        // Add click event to select character
+        card.addEventListener('click', () => {
+          if (gameState.activeTeam.includes(char.id)) {
+            removeFromTeam(char.id);
+          } else {
+            addToTeam(char.id);
+          }
+        });
+        
+        container.appendChild(card);
+      });
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Initialize background slider
+      initBackgroundSlider();
+      
+      // Load game state
+      loadGameState();
+      
+      // Event Listeners
+      document.getElementById('back-to-hub').addEventListener('click', () => {
+        window.location.href = 'game.html';
+      });
+      
+      document.getElementById('save-team').addEventListener('click', () => {
+        saveGameState();
+        alert('Team saved successfully!');
+      });
+      
+      document.getElementById('clear-team').addEventListener('click', () => {
+        gameState.activeTeam = [];
+        updateTeamDisplay();
+      });
+      
+      document.getElementById('go-to-collection').addEventListener('click', () => {
+        saveGameState();
+        window.location.href = 'game-collection.html';
+      });
+      
+      document.getElementById('go-to-battle').addEventListener('click', () => {
+        saveGameState();
+        window.location.href = 'game-battle.html';
+      });
+      
+      // Initialize team slots to be droppable
+      for (let i = 1; i <= 3; i++) {
+        const slot = document.getElementById(`team-slot-${i}`);
+        slot.addEventListener('click', () => {
+          // If slot is empty and there are characters available, fill it with the first available character
+          if (!slot.classList.contains('filled') && gameState.playerCharacters.length > 0 && gameState.activeTeam.length < 3) {
+            // Find first character not already in team
+            const availableChar = gameState.playerCharacters.find(char => !gameState.activeTeam.includes(char.id));
+            if (availableChar) {
+              addToTeam(availableChar.id);
+            }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

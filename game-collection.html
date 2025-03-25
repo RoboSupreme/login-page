@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Journal - Character Collection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      line-height: 1.6;
+      padding: 20px;
+      color: #2d3748;
+    }
+    
+    .background-slider {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .slider-img {
+      position: absolute;
+      height: 100%;
+      width: auto;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .slide-left {
+      animation: slideLeft 10s linear;
+    }
+    
+    .slide-right {
+      animation: slideRight 10s linear;
+    }
+    
+    .slide-top {
+      animation: slideTop 10s linear;
+    }
+    
+    .slide-bottom {
+      animation: slideBottom 10s linear;
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+    
+    @keyframes slideRight {
+      0% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+    }
+    
+    @keyframes slideTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+    
+    @keyframes slideBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(5px);
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    h1 {
+      color: #2d3748;
+      font-size: 2.2em;
+      font-weight: 600;
+    }
+    
+    h2 {
+      color: #4a5568;
+      font-size: 1.5em;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    
+    .button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-image: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      background-image: linear-gradient(135deg, #764ba2, #667eea);
+    }
+    
+    .back-button {
+      background-image: linear-gradient(135deg, #757575, #424242);
+    }
+    
+    .back-button:hover {
+      background-image: linear-gradient(135deg, #424242, #757575);
+    }
+    
+    .pull-button {
+      background-image: linear-gradient(135deg, #4CAF50, #2e7d32);
+    }
+    
+    .pull-button:hover {
+      background-image: linear-gradient(135deg, #2e7d32, #4CAF50);
+    }
+    
+    .game-currency {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #FFD700, #FFA000);
+      padding: 8px 15px;
+      border-radius: 25px;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-currency span {
+      margin-left: 8px;
+    }
+    
+    .section-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .character-card {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+    }
+    
+    .character-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .pull-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.5s ease;
+    }
+    
+    .pull-animation.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    
+    .pull-card {
+      width: 200px;
+      height: 300px;
+      background: linear-gradient(135deg, #4a148c, #7b1fa2);
+      border-radius: 10px;
+      position: relative;
+      transform: scale(0);
+      transition: transform 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .pull-animation.active .pull-card {
+      transform: scale(1);
+    }
+    
+    .results-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .section-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-slider">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/1zoJojJNyF1E5MIK?optimizer=image&width=1536" alt="HKIS Image 1" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/z1YVNy0F7IhP5kmv?optimizer=image&width=1536" alt="HKIS Image 2" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/OUXtie6rUc4St9ea?optimizer=image&width=1536" alt="HKIS Image 3" class="slider-img">
+  </div>
+  
+  <div class="pull-animation" id="pull-animation">
+    <div class="pull-card" id="pull-card">
+      <h3>Pulling...</h3>
+      <div id="pull-result"></div>
+    </div>
+  </div>
+  
+  <div class="container">
+    <header>
+      <h1>Character Collection</h1>
+      <div style="display: flex; gap: 15px;">
+        <div class="game-currency">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="6" x2="12" y2="12"></line>
+            <line x1="12" y1="12" x2="16" y2="16"></line>
+          </svg>
+          <span id="currency-amount">1000</span>
+        </div>
+        <button class="button back-button" id="back-to-hub">Back to Game Hub</button>
+      </div>
+    </header>
+    
+    <div class="card">
+      <h2>Pull New Characters</h2>
+      <p>Use your game currency to pull new characters for your collection.</p>
+      <div class="section-buttons">
+        <button class="button pull-button" id="pull-single">Pull Single (100)</button>
+        <button class="button pull-button" id="pull-multi">Pull Multi (450)</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Recent Pulls</h2>
+      <div id="pull-results"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Your Collection</h2>
+      <div class="results-container" id="character-collection">
+        <!-- Character collection will be displayed here -->
+      </div>
+    </div>
+    
+    <div class="nav-buttons">
+      <button class="button" id="go-to-battle">Go to Battle</button>
+      <button class="button" id="go-to-deck">Go to Deck</button>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Supabase client (using the same as your main app)
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    // Sample character data (would normally come from a database)
+    const characterData = [
+      { id: 1, name: "Melodia", type: "Support", energy: 100, maxEnergy: 100, regenRate: 5, regenAmount: 10 },
+      { id: 2, name: "Rhythm", type: "Attacker", energy: 80, maxEnergy: 80, regenRate: 4, regenAmount: 8 },
+      { id: 3, name: "Harmony", type: "Defender", energy: 120, maxEnergy: 120, regenRate: 3, regenAmount: 6 },
+      { id: 4, name: "Tempo", type: "Attacker", energy: 90, maxEnergy: 90, regenRate: 6, regenAmount: 12 },
+      { id: 5, name: "Beats", type: "Support", energy: 110, maxEnergy: 110, regenRate: 5, regenAmount: 10 },
+      { id: 6, name: "Symphony", type: "Defender", energy: 130, maxEnergy: 130, regenRate: 4, regenAmount: 8 }
+    ];
+    
+    // Game state
+    let gameState = {
+      currency: 1000,
+      playerCharacters: [],
+      recentPulls: [],
+      activeTeam: []
+    };
+    
+    // Load game state from localStorage
+    function loadGameState() {
+      const savedState = localStorage.getItem('gameState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        gameState.currency = parsedState.currency || 1000;
+        gameState.playerCharacters = parsedState.playerCharacters || [];
+        gameState.recentPulls = parsedState.recentPulls || [];
+        gameState.activeTeam = parsedState.activeTeam || [];
+        
+        // Update UI
+        document.getElementById('currency-amount').textContent = gameState.currency;
+        updateCharacterCollection();
+        updateRecentPulls();
+      }
+    }
+    
+    // Save game state to localStorage
+    function saveGameState() {
+      localStorage.setItem('gameState', JSON.stringify(gameState));
+    }
+    
+    // Initialize background slider animation
+    function initBackgroundSlider() {
+      const images = document.querySelectorAll('.slider-img');
+      if (images.length === 0) return;
+      
+      const directions = ['slide-left', 'slide-right', 'slide-top', 'slide-bottom'];
+      let currentImageIndex = 0;
+      
+      function animateNextImage() {
+        // Remove animation from all images
+        images.forEach(img => {
+          img.classList.remove(...directions);
+          img.style.opacity = 0;
+        });
+        
+        // Get the next direction randomly
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        
+        // Show and animate next image
+        const img = images[currentImageIndex];
+        img.classList.add(direction);
+        
+        // Move to next image, loop back to start if at the end
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        
+        // Wait for animation to finish, then do the next one
+        setTimeout(animateNextImage, 10000); // 10 seconds
+      }
+      
+      // Start animation sequence
+      console.log('Starting background animation');
+      animateNextImage();
+    }
+    
+    // Pull characters
+    function pullCharacters(count) {
+      const cost = count === 1 ? 100 : 450;
+      
+      if (gameState.currency < cost) {
+        alert('Not enough currency!');
+        return;
+      }
+      
+      gameState.currency -= cost;
+      document.getElementById('currency-amount').textContent = gameState.currency;
+      
+      const results = [];
+      
+      for (let i = 0; i < count; i++) {
+        // Random character from our sample data (in a real game this would pull from a larger pool)
+        const randomIndex = Math.floor(Math.random() * characterData.length);
+        const newChar = JSON.parse(JSON.stringify(characterData[randomIndex]));
+        newChar.id = Date.now() + i; // ensure unique ID
+        newChar.obtained = new Date().toLocaleString();
+        
+        results.push(newChar);
+        
+        // Add to player's collection
+        gameState.playerCharacters.push(newChar);
+      }
+      
+      // Add to recent pulls
+      gameState.recentPulls = results.concat(gameState.recentPulls).slice(0, 10);
+      
+      // Save game state
+      saveGameState();
+      
+      // Animate the pull
+      animatePull(results);
+      
+      // Update UI
+      updateCharacterCollection();
+      updateRecentPulls();
+    }
+    
+    // Animate character pull
+    function animatePull(results) {
+      const animation = document.getElementById('pull-animation');
+      const card = document.getElementById('pull-card');
+      const result = document.getElementById('pull-result');
+      
+      // Show animation container
+      animation.classList.add('active');
+      
+      // For each character, show animation
+      let index = 0;
+      
+      function showNextCharacter() {
+        if (index >= results.length) {
+          // End animation
+          setTimeout(() => {
+            animation.classList.remove('active');
+          }, 1000);
+          return;
+        }
+        
+        const character = results[index];
+        result.innerHTML = `
+          <h2>${character.name}</h2>
+          <p>Type: ${character.type}</p>
+          <p>Energy: ${character.maxEnergy}</p>
+        `;
+        
+        // Wait before showing next character
+        index++;
+        setTimeout(showNextCharacter, 2000);
+      }
+      
+      showNextCharacter();
+    }
+    
+    // Update character collection display
+    function updateCharacterCollection() {
+      const container = document.getElementById('character-collection');
+      container.innerHTML = '';
+      
+      if (gameState.playerCharacters.length === 0) {
+        container.innerHTML = '<p>No characters yet. Pull some characters to start your collection!</p>';
+        return;
+      }
+      
+      gameState.playerCharacters.forEach(char => {
+        const card = document.createElement('div');
+        card.className = 'character-card';
+        card.innerHTML = `
+          <h3>${char.name}</h3>
+          <div class="stats">
+            <div class="stat">
+              <span>Type:</span>
+              <span>${char.type}</span>
+            </div>
+            <div class="stat">
+              <span>Max Energy:</span>
+              <span>${char.maxEnergy}</span>
+            </div>
+            <div class="stat">
+              <span>Regen:</span>
+              <span>${char.regenAmount} every ${char.regenRate}s</span>
+            </div>
+            ${char.obtained ? `<div class="stat"><span>Obtained:</span><span>${char.obtained}</span></div>` : ''}
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    // Update recent pulls display
+    function updateRecentPulls() {
+      const container = document.getElementById('pull-results');
+      container.innerHTML = '';
+      
+      if (gameState.recentPulls.length === 0) {
+        container.innerHTML = '<p>No recent pulls</p>';
+        return;
+      }
+      
+      const pullList = document.createElement('ul');
+      pullList.style.listStyle = 'none';
+      pullList.style.padding = '0';
+      
+      gameState.recentPulls.forEach(char => {
+        const item = document.createElement('li');
+        item.style.marginBottom = '10px';
+        item.innerHTML = `<strong>${char.name}</strong> (${char.type}) - Obtained: ${char.obtained}`;
+        pullList.appendChild(item);
+      });
+      
+      container.appendChild(pullList);
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Initialize background slider
+      initBackgroundSlider();
+      
+      // Load game state
+      loadGameState();
+      
+      // Event Listeners
+      document.getElementById('back-to-hub').addEventListener('click', () => {
+        window.location.href = 'game.html';
+      });
+      
+      document.getElementById('pull-single').addEventListener('click', () => {
+        pullCharacters(1);
+      });
+      
+      document.getElementById('pull-multi').addEventListener('click', () => {
+        pullCharacters(5);
+      });
+      
+      document.getElementById('go-to-battle').addEventListener('click', () => {
+        window.location.href = 'game-battle.html';
+      });
+      
+      document.getElementById('go-to-deck').addEventListener('click', () => {
+        window.location.href = 'game-deck.html';
+      });
+    });
+  </script>
+</body>
+</html>

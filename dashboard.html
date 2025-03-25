@@ -397,6 +397,7 @@
         
         <!-- Common Action Buttons (visible to all) -->
         <button id="journalBtn" class="button journal-btn" style="display: block; width: 100%; padding: 10px; margin-top: 20px; margin-bottom: 10px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">General Journal</button>
+        <button id="takeBreakBtn" class="button journal-btn" style="margin-bottom: 15px;">Take a Break</button>
         <button id="logoutBtn" class="button logout-btn" style="display: block; width: 100%; padding: 10px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">Logout</button>
         
         <!-- Admin Section (shown only for admins) -->
@@ -535,6 +536,11 @@
       // Handle general journal navigation (no class context)
       document.getElementById('journalBtn').addEventListener('click', () => {
         window.location.href = 'journal.html';
+      });
+      
+      // Handle take a break button click
+      document.getElementById('takeBreakBtn').addEventListener('click', () => {
+        window.location.href = 'game.html';
       });
       
       // Handle join class button

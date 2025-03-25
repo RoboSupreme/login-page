@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Journal - Battle Arena</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      line-height: 1.6;
+      padding: 20px;
+      color: #2d3748;
+    }
+    
+    .background-slider {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .slider-img {
+      position: absolute;
+      height: 100%;
+      width: auto;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    
+    .slide-left {
+      animation: slideLeft 10s linear;
+    }
+    
+    .slide-right {
+      animation: slideRight 10s linear;
+    }
+    
+    .slide-top {
+      animation: slideTop 10s linear;
+    }
+    
+    .slide-bottom {
+      animation: slideBottom 10s linear;
+    }
+    
+    @keyframes slideLeft {
+      0% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+    
+    @keyframes slideRight {
+      0% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-100%);
+      }
+    }
+    
+    @keyframes slideTop {
+      0% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+    }
+    
+    @keyframes slideBottom {
+      0% {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      5% {
+        opacity: 0.3;
+      }
+      95% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100%);
+      }
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(5px);
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    h1 {
+      color: #2d3748;
+      font-size: 2.2em;
+      font-weight: 600;
+    }
+    
+    h2 {
+      color: #4a5568;
+      font-size: 1.5em;
+      font-weight: 500;
+      margin-bottom: 15px;
+    }
+    
+    .button {
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      background-image: linear-gradient(135deg, #667eea, #764ba2);
+    }
+    
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      background-image: linear-gradient(135deg, #764ba2, #667eea);
+    }
+    
+    .battle-button {
+      background-image: linear-gradient(135deg, #ff4081, #c51162);
+    }
+    
+    .battle-button:hover {
+      background-image: linear-gradient(135deg, #c51162, #ff4081);
+    }
+    
+    .back-button {
+      background-image: linear-gradient(135deg, #757575, #424242);
+    }
+    
+    .back-button:hover {
+      background-image: linear-gradient(135deg, #424242, #757575);
+    }
+    
+    .game-currency {
+      display: flex;
+      align-items: center;
+      background: linear-gradient(135deg, #FFD700, #FFA000);
+      padding: 8px 15px;
+      border-radius: 25px;
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .game-currency span {
+      margin-left: 8px;
+    }
+    
+    .section-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    /* Battle grid styles */
+    .battle-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 5px;
+      margin: 20px 0;
+      aspect-ratio: 1/1;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .grid-cell {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      aspect-ratio: 1/1;
+      position: relative;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .grid-cell:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: scale(1.05);
+    }
+    
+    .grid-cell.occupied {
+      /* Removed purple-blue background */
+      background: transparent;
+    }
+    
+    .grid-cell.hazard {
+      background: rgba(255, 99, 71, 0.3);
+    }
+    
+    .attack-range {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 87, 34, 0.3);
+      border: 2px dashed #f44336;
+      border-radius: 5px;
+      pointer-events: none;
+      z-index: 1;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    
+    .attack-range.clickable {
+      background: rgba(255, 0, 0, 0.5);
+      cursor: pointer;
+      pointer-events: auto;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 0.8; }
+      100% { opacity: 0.5; }
+    }
+    
+    .character {
+      width: 80%;
+      height: 80%;
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      z-index: 5;
+      transition: all 0.3s ease;
+    }
+    
+    .character.player {
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    }
+    
+    .character.player.archer {
+      background: linear-gradient(135deg, #03A9F4, #0288D1);
+      /* Removed light blue border */
+    }
+    
+    .character.enemy {
+      background: linear-gradient(135deg, #F44336, #B71C1C);
+    }
+    
+    .character.enemy.boss {
+      background: linear-gradient(135deg, #d50000, #7f0000);
+      transform: scale(1.1);
+      border: 2px solid #ffeb3b;
+      box-shadow: 0 0 8px rgba(255, 235, 59, 0.6);
+      z-index: 6;
+    }
+    
+    /* Ensure characters animate smoothly when moving */
+    .character {
+      transition: transform 500ms ease-out;
+      z-index: 10;
+    }
+    
+    .character-info {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    
+    .character-card {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .character-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .character-card h3 {
+      color: #2d3748;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    
+    .stats {
+      font-size: 0.9rem;
+    }
+    
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .active {
+      border: 2px solid #4CAF50;
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .controls-info {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    
+    .controls-info ul {
+      list-style-type: none;
+      margin-left: 15px;
+    }
+    
+    .controls-info li {
+      margin-bottom: 5px;
+    }
+    
+    .energy-bar {
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .energy-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    
+    /* Alert Box Styles */
+    .alert-box {
+      background: linear-gradient(135deg, #283444, #1a222e);
+      border-radius: 12px;
+      padding: 15px;
+      margin: 15px 0;
+      border-left: 5px solid #4d6b94;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      color: #fff;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    /* Selected character highlight */
+    .character.selected {
+      box-shadow: 0 0 12px 4px #4CAF50, 0 0 20px 8px rgba(76, 175, 80, 0.4);
+      transform: scale(1.15);
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+    
+    /* Attack range styles */
+    .attack-range {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 87, 34, 0.4);
+      border: 2px dashed #FF5722;
+      border-radius: 4px;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      animation: pulse 1.5s infinite;
+      pointer-events: none;
+    }
+    
+    .attack-range.clickable {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+      100% { opacity: 0.4; }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .alert-box h3 {
+      margin-top: 0;
+      color: #cfd8e3;
+      font-size: 1.2rem;
+    }
+    
+    .alert-box p {
+      margin: 8px 0;
+      font-size: 0.95rem;
+      color: #a4b5cd;
+    }
+    
+    .alert-box strong {
+      color: #ffffff;
+    }
+    
+    .alert-box.success {
+      border-left-color: #4CAF50;
+      background: linear-gradient(135deg, #24352a, #1a2e1e);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .battle-grid {
+        max-width: 300px;
+      }
+      
+      .character-info {
+        flex-direction: column;
+      }
+      
+      .section-buttons {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background-slider">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/1zoJojJNyF1E5MIK?optimizer=image&width=1536" alt="HKIS Image 1" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/z1YVNy0F7IhP5kmv?optimizer=image&width=1536" alt="HKIS Image 2" class="slider-img">
+    <img src="https://mms.magloft.com/Rm1hCOb8sG8Wrikp/OUXtie6rUc4St9ea?optimizer=image&width=1536" alt="HKIS Image 3" class="slider-img">
+  </div>
+  
+  <div class="container">
+    <header>
+      <h1>Battle Arena</h1>
+      <div style="display: flex; gap: 15px;">
+        <div class="game-currency">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="6" x2="12" y2="12"></line>
+            <line x1="12" y1="12" x2="16" y2="16"></line>
+          </svg>
+          <span id="currency-amount">1000</span>
+        </div>
+        <button class="button back-button" id="back-to-hub">Back to Game Hub</button>
+        <button class="button" id="reset-game" style="background-color: #ff5252; color: white;">Reset Game</button>
+      </div>
+    </header>
+    
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Battle Controls</h2>
+        <button class="button battle-button" id="start-battle">Start Battle</button>
+      </div>
+      <p>Select your team and battle against opponents on the 5x5 grid.</p>
+      <div id="battle-instructions" style="display: none;"></div>
+      
+      <div id="battle-container" style="display: none;">
+        <div class="battle-grid" id="battle-grid">
+          <!-- Grid will be generated with JavaScript -->
+        </div>
+        
+        <div class="character-info" id="character-info">
+          <!-- Character info will be displayed here -->
+        </div>
+        
+        <div class="controls-info">
+          <h3>Controls</h3>
+          <ul>
+            <li><strong>1, 2, 3</strong> - Select different characters</li>
+            <li><strong>W, A, S, D</strong> or <strong>Arrow Keys</strong> - Move selected character</li>
+            <li><strong>Space</strong> - Show/hide attack range</li>
+            <li>Moving costs 10 energy</li>
+            <li>Attacking costs 30 energy</li>
+            <li>Energy regenerates over time</li>
+            <li>Red tiles are environmental hazards</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <div class="nav-buttons">
+      <button class="button" id="go-to-collection">Go to Collection</button>
+      <button class="button" id="go-to-deck">Go to Deck</button>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Supabase client (using the same as your main app)
+    const supabaseClient = supabase.createClient(
+      'https://xtwamtfxirypcxszldow.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh0d2FtdGZ4aXJ5cGN4c3psZG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA0NTIwMzQsImV4cCI6MjA1NjAyODAzNH0.ZZRtoHPlie0FN5IAF1WVd4sRqWOWH_ZfP149Gorit1c'
+    );
+    
+    // Game state
+    let gameState = {
+      currency: 1000,
+      playerCharacters: [],
+      selectedCharacter: null,
+      battleActive: false,
+      grid: [],
+      occupiedCells: {},
+      energyInterval: null,
+      activeTeam: [],
+      battleCharacters: [], // Characters from activeTeam currently in battle
+      preparationPhase: false, // Flag for preparation phase before battle
+      battleStarted: false,    // Flag for when actual battle begins (after prep phase)
+      enemies: [],             // Enemy characters
+      attackRangeCells: [],    // Currently displayed attack range
+      attackCost: 30,          // Energy cost for attacks
+      showingAttackRange: false // Flag when showing attack range
+    };
+    
+    // Load game state from localStorage
+    function loadGameState() {
+      console.log('[loadGameState] Starting to load game state...');
+      
+      const savedState = localStorage.getItem('gameState');
+      if (savedState) {
+        console.log('[loadGameState] Found saved state in localStorage');
+        try {
+          const parsedState = JSON.parse(savedState);
+          gameState.currency = parsedState.currency || 1000;
+          gameState.playerCharacters = parsedState.playerCharacters || [];
+          gameState.activeTeam = parsedState.activeTeam || [];
+          console.log('[loadGameState] Loaded saved state:', 
+            { playerCharCount: gameState.playerCharacters.length, activeTeamSize: gameState.activeTeam.length });
+        } catch (e) {
+          console.error('[loadGameState] Error parsing saved state:', e);
+          // If there's an error, clear the saved state and use defaults
+          localStorage.removeItem('gameState');
+          initializeDefaultCharacters();
+        }
+      } else {
+        console.log('[loadGameState] No saved state found, initializing with defaults');
+        initializeDefaultCharacters();
+      }
+      
+      // Ensure each character has necessary properties initialized
+      if (gameState.playerCharacters.length === 0) {
+        console.warn('[loadGameState] No player characters after loading state. Forcing defaults.');
+        initializeDefaultCharacters();
+      }
+      
+      gameState.playerCharacters.forEach(char => {
+        char.position = null;
+        
+        // Basic stats
+        char.maxEnergy = char.maxEnergy || 50; // Default max energy is now 50
+        char.energy = char.maxEnergy;
+        char.maxHp = char.maxHp || 100;
+        char.hp = char.maxHp;
+        char.regenAmount = char.regenAmount || 10;
+        char.regenRate = char.regenRate || 3;
+        
+        // Animation and state properties
+        char.facing = char.facing || 'south';
+        char.state = char.state || 'idle';
+        
+        // Set defaults for combat properties if not set
+        char.attackDamage = char.attackDamage || 30;
+        char.attackCost = char.attackCost || 30;
+        char.skillDamage = char.skillDamage || 50;
+        char.skillCost = char.skillCost || 40;
+        
+        // Defense properties
+        char.baseDefense = char.baseDefense || 10;
+        char.defenseFacing = char.defenseFacing || 20;
+        
+        // Animation properties
+        char.attackSpeed = char.attackSpeed || 1.0;
+        char.moveSpeed = char.moveSpeed || 1.0;
+        char.moveEnergyCost = char.moveEnergyCost || 10;
+        
+        // Attack patterns
+        if (!char.attackRange) {
+          char.attackRange = {
+            pattern: char.type === 'Archer' ? 'line' : 
+                    (char.type === 'Mage' ? 'square' : 'cross'),
+            distance: char.type === 'Archer' ? 3 : 
+                    (char.type === 'Mage' ? 2 : 1)
+          };
+        }
+        
+        if (!char.skillRange) {
+          char.skillRange = {
+            pattern: char.type === 'Mage' ? 'cross' : 
+                   (char.type === 'Archer' ? 'square' : 'cross'),
+            distance: char.type === 'Mage' ? 3 : 2
+          };
+        }
+      });
+      
+      console.log('[loadGameState] Final state after initialization:', 
+        { playerCharCount: gameState.playerCharacters.length, activeTeamSize: gameState.activeTeam.length });
+      
+      // Update UI
+      document.getElementById('currency-amount').textContent = gameState.currency;
+    }
+    
+    // Helper function to initialize default characters
+    function initializeDefaultCharacters() {
+      gameState.playerCharacters = [
+        { 
+          id: 'char1', 
+          name: 'Warrior', 
+          type: 'Fighter', 
+          rarity: 'Rare', 
+          maxHp: 120, 
+          hp: 120, 
+          maxEnergy: 50, 
+          regenAmount: 10, 
+          regenRate: 3, 
+          
+          // Combat properties
+          attackDamage: 40,
+          attackCost: 30,
+          skillDamage: 60,
+          skillCost: 40,
+          
+          // Defense mechanics
+          baseDefense: 20,
+          defenseFacing: 30, // Additional defense when facing attacker
+          
+          // Attack properties
+          attackRange: {
+            pattern: 'cross',
+            distance: 1
+          },
+          skillRange: {
+            pattern: 'cross',
+            distance: 2
+          },
+          
+          // Animation properties
+          attackSpeed: 1.0,
+          moveSpeed: 1.0,
+          moveEnergyCost: 10,
+          
+          // State tracking
+          facing: 'south',
+          state: 'idle', // 'idle', 'moving', 'attacking', 'defending', 'skill'
+          
+          lore: 'A powerful warrior with strong attacks.'
+        },
+        { 
+          id: 'char2', 
+          name: 'Archer', 
+          type: 'Archer', 
+          rarity: 'Epic', 
+          maxHp: 80, 
+          hp: 80, 
+          maxEnergy: 50, 
+          regenAmount: 15, 
+          regenRate: 3, 
+          
+          // Combat properties
+          attackDamage: 30,
+          attackCost: 25,
+          skillDamage: 50,
+          skillCost: 35,
+          
+          // Defense mechanics
+          baseDefense: 10,
+          defenseFacing: 20, // Additional defense when facing attacker
+          
+          // Attack properties
+          attackRange: {
+            pattern: 'line',
+            distance: 3
+          },
+          skillRange: {
+            pattern: 'square',
+            distance: 2
+          },
+          
+          // Animation properties
+          attackSpeed: 1.2,
+          moveSpeed: 1.2,
+          moveEnergyCost: 8,
+          
+          // State tracking
+          facing: 'south',
+          state: 'idle', // 'idle', 'moving', 'attacking', 'defending', 'skill'
+          
+          lore: 'A skilled archer with long-range attacks.'
+        },
+        { 
+          id: 'char3', 
+          name: 'Mage', 
+          type: 'Mage', 
+          rarity: 'Legendary', 
+          maxHp: 70, 
+          hp: 70, 
+          maxEnergy: 50, 
+          regenAmount: 20, 
+          regenRate: 2, 
+          
+          // Combat properties
+          attackDamage: 45,
+          attackCost: 30,
+          skillDamage: 70,
+          skillCost: 45,
+          
+          // Defense mechanics
+          baseDefense: 5,
+          defenseFacing: 15, // Additional defense when facing attacker
+          
+          // Attack properties
+          attackRange: {
+            pattern: 'square',
+            distance: 2
+          },
+          skillRange: {
+            pattern: 'cross',
+            distance: 3
+          },
+          
+          // Animation properties
+          attackSpeed: 0.8,
+          moveSpeed: 0.9,
+          moveEnergyCost: 12,
+          
+          // State tracking
+          facing: 'south',
+          state: 'idle', // 'idle', 'moving', 'attacking', 'defending', 'skill'
+          
+          lore: 'A powerful mage with area attacks.'
+        },
+        { 
+          id: 'char4', 
+          name: 'Healer', 
+          type: 'Support', 
+          rarity: 'Rare', 
+          maxHp: 90, 
+          hp: 90, 
+          maxEnergy: 50, 
+          regenAmount: 12, 
+          regenRate: 2, 
+          
+          // Combat properties
+          attackDamage: 15,
+          attackCost: 20,
+          skillDamage: 0, // Healing instead
+          skillCost: 30,
+          
+          // Defense mechanics
+          baseDefense: 15,
+          defenseFacing: 25, // Additional defense when facing attacker
+          
+          // Attack properties
+          attackRange: {
+            pattern: 'cross',
+            distance: 1
+          },
+          skillRange: {
+            pattern: 'square',
+            distance: 2
+          },
+          
+          // Animation properties
+          attackSpeed: 1.0,
+          moveSpeed: 1.0,
+          moveEnergyCost: 10,
+          
+          // State tracking
+          facing: 'south',
+          state: 'idle', // 'idle', 'moving', 'attacking', 'defending', 'skill'
+          
+          lore: 'A devoted healer who supports allies.'
+        }
+      ];
+      gameState.activeTeam = ['char1', 'char2', 'char3'];
+      console.log('[initializeDefaultCharacters] Created default characters and active team');
+    }
+    
+    // Save game state to localStorage
+    function saveGameState() {
+      // Save only the persistent data (not battle-specific state)
+      const stateToSave = {
+        currency: gameState.currency,
+        playerCharacters: gameState.playerCharacters.map(char => {
+          // Create a clean copy without battle-specific properties
+          const cleanChar = { ...char };
+          delete cleanChar.position;
+          delete cleanChar.element;
+          delete cleanChar.energy;
+          return cleanChar;
+        })
+      };
+      
+      localStorage.setItem('gameState', JSON.stringify(stateToSave));
+    }
+    
+    // Initialize background slider animation
+    function initBackgroundSlider() {
+      const images = document.querySelectorAll('.slider-img');
+      if (images.length === 0) return;
+      
+      const directions = ['slide-left', 'slide-right', 'slide-top', 'slide-bottom'];
+      let currentImageIndex = 0;
+      
+      function animateNextImage() {
+        // Remove animation from all images
+        images.forEach(img => {
+          img.classList.remove(...directions);
+          img.style.opacity = 0;
+        });
+        
+        // Get the next direction randomly
+        const direction = directions[Math.floor(Math.random() * directions.length)];
+        
+        // Show and animate next image
+        const img = images[currentImageIndex];
+        img.classList.add(direction);
+        
+        // Move to next image, loop back to start if at the end
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        
+        // Wait for animation to finish, then do the next one
+        setTimeout(animateNextImage, 10000); // 10 seconds
+      }
+      
+      // Start animation sequence
+      console.log('Starting background animation');
+      animateNextImage();
+    }
+    
+    // Initialize grid
+    function initGrid() {
+      const grid = document.getElementById('battle-grid');
+      
+      // Clear existing grid
+      grid.innerHTML = '';
+      gameState.grid = [];
+      gameState.occupiedCells = {};
+      
+      // Create 5x5 grid
+      for (let row = 0; row < 5; row++) {
+        gameState.grid[row] = [];
+        for (let col = 0; col < 5; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'grid-cell';
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          
+          // 10% chance of environmental hazard
+          const isHazard = Math.random() < 0.1;
+          if (isHazard) {
+            cell.classList.add('hazard');
+          }
+          
+          gameState.grid[row][col] = {
+            element: cell,
+            occupied: false,
+            hazard: isHazard,
+            character: null
+          };
+          
+          // Add click event for cell selection
+          cell.addEventListener('click', () => handleCellClick(row, col));
+          
+          grid.appendChild(cell);
+        }
+      }
+    }
+    
+    // Handle cell click in battle grid
+    function handleCellClick(row, col) {
+      if (!gameState.battleActive || !gameState.selectedCharacter) return;
+      
+      // Check if cell is already occupied by an enemy and we have attack range showing
+      if (gameState.grid[row][col].occupied && gameState.showingAttackRange) {
+        const target = gameState.grid[row][col].character;
+        if (target && target.isEnemy) {
+          // Attack the enemy directly instead of through the attack range UI
+          attackEnemy(gameState.selectedCharacter, target);
+          return;
+        }
+      }
+      
+      // Check if cell is already occupied for movement
+      if (gameState.grid[row][col].occupied) {
+        console.log('Cell is already occupied');
+        return;
+      }
+      
+      // Get the character's current position
+      const character = gameState.selectedCharacter;
+      const currentPos = character.position;
+      
+      // If in preparation phase, only allow placement in last two rows (3 and 4)
+      if (gameState.preparationPhase && !gameState.battleStarted) {
+        if (row < 3) {
+          alert('During preparation, you can only place characters in the last two rows!');  
+          return;
+        }
+        
+        if (!currentPos) {
+          placeCharacter(character, row, col);
+          
+          // Check if all characters are placed
+          checkAllCharactersPlaced();
+          return;
+        } else {
+          // Allow repositioning during preparation phase
+          // Remove from old position
+          gameState.grid[currentPos.row][currentPos.col].occupied = false;
+          gameState.grid[currentPos.row][currentPos.col].character = null;
+          delete gameState.occupiedCells[`${currentPos.row},${currentPos.col}`];
+          
+          // Update grid UI
+          const gridCell = document.querySelector(`.grid-cell[data-row="${currentPos.row}"][data-col="${currentPos.col}"]`);
+          const charElement = gridCell.querySelector('.character');
+          if (charElement) {
+            gridCell.removeChild(charElement);
+          }
+          
+          // Place in new position
+          placeCharacter(character, row, col);
+          return;
+        }
+      }
+      
+      // If battle has started and character not yet placed, just place it
+      if (!currentPos) {
+        placeCharacter(character, row, col);
+        return;
+      }
+      
+      // Only allow moving during actual battle (after prep phase)
+      if (!gameState.battleStarted) return;
+      
+      // Calculate distance (only allow adjacent moves)
+      const distance = Math.abs(currentPos.row - row) + Math.abs(currentPos.col - col);
+      if (distance !== 1) {
+        console.log('Can only move to adjacent cells');
+        return;
+      }
+      
+      // Check if character has enough energy
+      if (character.energy < 10) {
+        console.log('Not enough energy to move');
+        return;
+      }
+      
+      // Move character
+      moveCharacter(character, row, col);
+    }
+    
+    // Place character on grid
+    function placeCharacter(character, row, col) {
+      // Create character element
+      const charElement = document.createElement('div');
+      charElement.className = 'character player';
+      
+      // Add character type class
+      if (character.type) {
+        charElement.classList.add(character.type.toLowerCase());
+      }
+      
+      // Add selected class if this is the selected character
+      if (gameState.selectedCharacter && gameState.selectedCharacter.id === character.id) {
+        charElement.classList.add('selected');
+      }
+      
+      charElement.textContent = character.name.charAt(0);
+      
+      // Add tooltip with character info
+      charElement.title = `${character.name} (${character.type || 'Fighter'}): ${character.hp || 100}/${character.maxHp || 100} HP`;
+      
+      // Mark cell as occupied
+      gameState.grid[row][col].occupied = true;
+      gameState.grid[row][col].character = character;
+      gameState.occupiedCells[`${row},${col}`] = character.id;
+      
+      // Add character to cell
+      gameState.grid[row][col].element.classList.add('occupied');
+      gameState.grid[row][col].element.appendChild(charElement);
+      
+      // Update character position
+      character.position = { row, col };
+      character.element = charElement;
+      
+      updateCharacterInfo();
+      updateSelectedCharacterVisual();
+      
+      // Show attack range if in battle
+      if (gameState.battleStarted && gameState.selectedCharacter && gameState.selectedCharacter.id === character.id) {
+        showAttackRange(character);
+      }
+    }
+    
+    // Move character from current position to new position with a simple transformation animation
+    function moveCharacter(character, newRow, newCol) {
+      const currentPos = character.position;
+      console.log(`Moving character from (${currentPos.row},${currentPos.col}) to (${newRow},${newCol})`);
+      
+      if (!character.element) {
+        console.error('Character element not found');
+        return;
+      }
+      
+      // Calculate cell size
+      const cellWidth = gameState.grid[0][0].element.offsetWidth;
+      const cellHeight = gameState.grid[0][0].element.offsetHeight;
+      
+      // Calculate the distance to move in cells
+      const moveX = (newCol - currentPos.col) * cellWidth;
+      const moveY = (newRow - currentPos.row) * cellHeight;
+      
+      // Both source and destination cells are marked as occupied during movement
+      gameState.grid[newRow][newCol].occupied = true;
+      gameState.occupiedCells[`${newRow},${newCol}`] = character.id;
+      
+      // Apply transform to animate the movement
+      character.element.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      
+      // Consume energy
+      character.energy -= 10;
+      
+      // After animation completes
+      setTimeout(() => {
+        // Reset the transform
+        character.element.style.transform = '';
+        
+        // Remove from original cell
+        const originalCell = gameState.grid[currentPos.row][currentPos.col].element;
+        if (originalCell.contains(character.element)) {
+          originalCell.removeChild(character.element);
+        }
+        
+        // Update grid data for the original cell
+        gameState.grid[currentPos.row][currentPos.col].occupied = false;
+        gameState.grid[currentPos.row][currentPos.col].character = null;
+        gameState.grid[currentPos.row][currentPos.col].element.classList.remove('occupied');
+        delete gameState.occupiedCells[`${currentPos.row},${currentPos.col}`];
+        
+        // Add to new cell
+        const newCell = gameState.grid[newRow][newCol].element;
+        newCell.appendChild(character.element);
+        newCell.classList.add('occupied');
+        
+        // Update grid data for the new cell
+        gameState.grid[newRow][newCol].character = character;
+        
+        // Update character's position in the game state
+        character.position = { row: newRow, col: newCol };
+        
+        // Update UI
+        updateCharacterInfo();
+        updateSelectedCharacterVisual();
+        
+        // Check if on hazard tile
+        if (gameState.grid[newRow][newCol].hazard) {
+          console.log(`${character.name} stepped on a hazard tile!`);
+        }
+      }, 500);
+    }
+    
+    // Update character info display
+    function updateCharacterInfo() {
+      console.log('[updateCharacterInfo] Updating character info display');
+      const infoContainer = document.getElementById('character-info');
+      infoContainer.innerHTML = '';
+      
+      // Debug if there are no characters to display
+      if ((!gameState.battleActive && !gameState.preparationPhase && gameState.playerCharacters.length === 0) || 
+          ((gameState.battleActive || gameState.preparationPhase) && gameState.battleCharacters.length === 0)) {
+        console.error('[updateCharacterInfo] No characters to display!', { 
+          battleActive: gameState.battleActive,
+          preparationPhase: gameState.preparationPhase,
+          playerChars: gameState.playerCharacters.length, 
+          battleChars: gameState.battleCharacters.length 
+        });
+        
+        // Try to reload game state if no characters are available
+        if (gameState.playerCharacters.length === 0) {
+          console.log('[updateCharacterInfo] Attempting to reload game state due to missing characters');
+          loadGameState();
+        }
+      }
+      
+      // Only show battle characters (from active team) during battle
+      const charactersToDisplay = gameState.battleActive ? gameState.battleCharacters : gameState.playerCharacters;
+      
+      charactersToDisplay.forEach(char => {
+        const card = document.createElement('div');
+        card.className = 'character-card';
+        if (gameState.selectedCharacter && gameState.selectedCharacter.id === char.id) {
+          card.classList.add('active');
+        }
+        
+        // Calculate energy percentage
+        const energyPercent = (char.energy / char.maxEnergy) * 100;
+        
+        // Calculate HP percentage if in battle
+        const hpPercent = char.hp ? (char.hp / char.maxHp) * 100 : 100;
+        
+        // Highlight special abilities for archers
+        const archerInfo = char.type === 'Archer' ? `<div class="stat" style="color: #FF5722; font-weight: bold;">
+          <span>Special:</span>
+          <span>Extended Range</span>
+        </div>` : '';
+        
+        card.innerHTML = `
+          <h3>${char.name}</h3>
+          <div class="stats">
+            <div class="stat">
+              <span>Type:</span>
+              <span>${char.type}</span>
+            </div>
+            ${archerInfo}
+            ${gameState.battleStarted ? `
+            <div class="stat">
+              <span>HP:</span>
+              <span>${char.hp}/${char.maxHp}</span>
+            </div>
+            <div class="energy-bar" style="background-color: #ffcdd2;">
+              <div class="energy-fill" style="width: ${hpPercent}%; background-color: #f44336;"></div>
+            </div>
+            ` : ''}
+            <div class="stat">
+              <span>Energy:</span>
+              <span>${char.energy}/${char.maxEnergy}</span>
+            </div>
+            <div class="energy-bar">
+              <div class="energy-fill" style="width: ${energyPercent}%"></div>
+            </div>
+            <div class="stat">
+              <span>Regen:</span>
+              <span>${char.regenAmount} every ${char.regenRate}s</span>
+            </div>
+            ${gameState.battleStarted ? `
+            <div class="stat">
+              <span>Attack Cost:</span>
+              <span>${gameState.attackCost} energy</span>
+            </div>
+            ` : ''}
+          </div>
+        `;
+        
+        card.addEventListener('click', () => {
+          gameState.selectedCharacter = char;
+          updateCharacterInfo();
+          
+          // Update selected character visual on grid if the character is placed
+          updateSelectedCharacterVisual();
+        });
+        
+        infoContainer.appendChild(card);
+      });
+    }
+    
+    // Regenerate energy for all battle characters
+    function regenerateEnergy() {
+      if (!gameState.battleCharacters) return;
+      
+      gameState.battleCharacters.forEach(char => {
+        // Only regenerate if not at max
+        if (char.energy < char.maxEnergy) {
+          char.energy = Math.min(char.energy + char.regenAmount, char.maxEnergy);
+        }
+      });
+      
+      updateCharacterInfo();
+    }
+    
+    // Start preparation phase before battle
+    function startPreparation() {
+      console.log('[startPreparation] Starting preparation phase...');
+      console.log('[startPreparation] Active team:', gameState.activeTeam);
+      console.log('[startPreparation] Player characters:', gameState.playerCharacters);
+      
+      // Check if we have characters in the active team
+      if (!gameState.activeTeam || gameState.activeTeam.length === 0) {
+        console.warn('[startPreparation] No active team found');
+        alert('You need to select characters for your active team first! Go to the Deck Building section.');
+        window.location.href = 'game-deck.html';
+        return;
+      }
+      
+      // Check if active team has at least three characters
+      if (gameState.activeTeam.length < 3) {
+        alert('You need at least 3 characters in your active team to start a battle! Go to the Deck Building section.');
+        window.location.href = 'game-deck.html';
+        return;
+      }
+      
+      // Update button text and function
+      const battleButton = document.getElementById('start-battle');
+      battleButton.textContent = 'Begin Battle';
+      battleButton.disabled = true; // Disabled until all characters are placed
+      battleButton.removeEventListener('click', startPreparation);
+      battleButton.addEventListener('click', beginBattle);
+      
+      // Display instructions for preparation phase
+      const instructionsElement = document.getElementById('battle-instructions');
+      instructionsElement.style.display = 'block';
+      instructionsElement.innerHTML = `
+        <div class="alert-box">
+          <h3>Preparation Phase</h3>
+          <p>Place your characters on the last two rows of the grid.</p>
+          <p>Once all characters are placed, you can begin the battle.</p>
+          <p><strong>TIP:</strong> You can reposition characters during this phase by clicking on a different location.</p>
+        </div>
+      `;
+      
+      const battleContainer = document.getElementById('battle-container');
+      battleContainer.style.display = 'block';
+      
+      gameState.battleActive = true;
+      gameState.preparationPhase = true;
+      gameState.battleStarted = false;
+      
+      // Create fresh grid
+      initGrid();
+      
+      // Prepare battle characters - make working copies of active team characters
+      gameState.battleCharacters = [];
+      
+      console.log('[startPreparation] Initializing battle characters for active team:', gameState.activeTeam);
+      
+      // Get the active team characters from the player's collection
+      gameState.activeTeam.forEach(activeCharId => {
+        const playerChar = gameState.playerCharacters.find(char => char.id === activeCharId);
+        
+        if (playerChar) {
+          console.log(`[startPreparation] Found player character for ID ${activeCharId}:`, playerChar);
+          
+          // Create a copy for battle use
+          const battleChar = JSON.parse(JSON.stringify(playerChar));
+          battleChar.position = null;
+          
+          // Resource management
+          battleChar.maxEnergy = battleChar.maxEnergy || 50; // Default to 50 max energy
+          battleChar.energy = battleChar.maxEnergy;
+          
+          // Health initialization
+          battleChar.hp = battleChar.hp || battleChar.maxHp || 100;
+          battleChar.maxHp = battleChar.maxHp || 100;
+          
+          // Ensure character type is set (don't overwrite existing types)
+          if (!battleChar.type) {
+            // For characters with numerical IDs like 'char1', 'char2', etc.
+            const idNum = parseInt(battleChar.id.replace(/\D/g, '')) || 0;
+            if (idNum % 3 === 0) {
+              battleChar.type = 'Archer';
+            } else if (idNum % 3 === 1) {
+              battleChar.type = 'Fighter';
+            } else {
+              battleChar.type = 'Mage';
+            }
+            console.log(`[startPreparation] Assigned type ${battleChar.type} to character ${battleChar.id}`);
+          }
+          
+          // Set/reset state tracking properties
+          battleChar.facing = battleChar.facing || 'south';
+          battleChar.state = 'idle';
+          
+          // Initialize combat properties if not already set
+          battleChar.attackDamage = battleChar.attackDamage || 30;
+          battleChar.attackCost = battleChar.attackCost || 30;
+          battleChar.skillDamage = battleChar.skillDamage || 50;
+          battleChar.skillCost = battleChar.skillCost || 40;
+          
+          // Defense properties
+          battleChar.baseDefense = battleChar.baseDefense || 10;
+          battleChar.defenseFacing = battleChar.defenseFacing || 20;
+          
+          // Animation properties
+          battleChar.attackSpeed = battleChar.attackSpeed || 1.0;
+          battleChar.moveSpeed = battleChar.moveSpeed || 1.0;
+          battleChar.moveEnergyCost = battleChar.moveEnergyCost || 10;
+          
+          // Attack range properties
+          if (!battleChar.attackRange) {
+            battleChar.attackRange = {
+              pattern: battleChar.type === 'Archer' ? 'line' : 
+                      (battleChar.type === 'Mage' ? 'square' : 'cross'),
+              distance: battleChar.type === 'Archer' ? 3 : 
+                      (battleChar.type === 'Mage' ? 2 : 1)
+            };
+          }
+          
+          if (!battleChar.skillRange) {
+            battleChar.skillRange = {
+              pattern: battleChar.type === 'Mage' ? 'cross' : 
+                     (battleChar.type === 'Archer' ? 'square' : 'cross'),
+              distance: battleChar.type === 'Mage' ? 3 : 2
+            };
+          }
+          
+          gameState.battleCharacters.push(battleChar);
+        } else {
+          console.error(`[startPreparation] Character with ID ${activeCharId} not found in player characters:`, gameState.playerCharacters);
+        }
+      });
+      
+      // Update character info display
+      updateCharacterInfo();
+      
+      // Add debug statement to verify characters
+      console.log('Battle characters:', gameState.battleCharacters);
+      
+      // Select first character by default if we have any
+      if (gameState.battleCharacters.length > 0) {
+        gameState.selectedCharacter = gameState.battleCharacters[0];
+      }
+      
+      // Update character info display
+      updateCharacterInfo();
+    }
+    
+    // Check if all characters are placed
+    function checkAllCharactersPlaced() {
+      // Count how many characters are placed
+      const placedCount = gameState.battleCharacters.filter(char => char.position !== null).length;
+      const totalCharacters = gameState.battleCharacters.length;
+      const battleButton = document.getElementById('start-battle');
+      
+      // Update instructions to show progress
+      const instructionsElement = document.getElementById('battle-instructions');
+      instructionsElement.innerHTML = `
+        <div class="alert-box">
+          <h3>Preparation Phase</h3>
+          <p>Place your characters on the last two rows of the grid.</p>
+          <p>Characters placed: <strong>${placedCount}</strong> / <strong>${totalCharacters}</strong></p>
+          <p><strong>TIP:</strong> You can reposition characters during this phase by clicking on a different location.</p>
+        </div>
+      `;
+      
+      // Only enable the Begin Battle button when all characters are placed
+      if (placedCount === totalCharacters) {
+        battleButton.disabled = false;
+      } else {
+        battleButton.disabled = true;
+      }
+    }
+    
+    // Update the visual highlight for the selected character on the grid
+    function updateSelectedCharacterVisual() {
+      console.log('[updateSelectedCharacterVisual] Updating selected character:', 
+        gameState.selectedCharacter ? gameState.selectedCharacter.name : 'None');
+      
+      // Remove 'selected' class from all character elements
+      const allCharElements = document.querySelectorAll('.character.player');
+      allCharElements.forEach(elem => {
+        elem.classList.remove('selected');
+      });
+      
+      // Clear any existing attack range first
+      clearAttackRange();
+      
+      // If no character is selected, we're done
+      if (!gameState.selectedCharacter) {
+        console.log('[updateSelectedCharacterVisual] No character selected');
+        return;
+      }
+      
+      // If character is not placed yet, highlight its card but don't try to highlight on grid
+      if (!gameState.selectedCharacter.position) {
+        console.log('[updateSelectedCharacterVisual] Selected character not yet placed on grid');
+        // Update the cards to show the selected character
+        const cards = document.querySelectorAll('.character-card');
+        cards.forEach(card => {
+          if (card.dataset.characterId === gameState.selectedCharacter.id) {
+            card.classList.add('active');
+          } else {
+            card.classList.remove('active');
+          }
+        });
+        return;
+      }
+      
+      // Find the selected character's position and add the 'selected' class
+      const pos = gameState.selectedCharacter.position;
+      const gridCell = document.querySelector(`.grid-cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+      if (gridCell) {
+        const charElement = gridCell.querySelector('.character');
+        if (charElement) {
+          charElement.classList.add('selected');
+        }
+      }
+      
+      // If battle has started, show attack range
+      if (gameState.battleStarted) {
+        showAttackRange(gameState.selectedCharacter);
+      }
+    }
+    
+    // Begin actual battle after preparation
+    function beginBattle() {
+      // Update button text and function
+      const battleButton = document.getElementById('start-battle');
+      battleButton.textContent = 'End Battle';
+      battleButton.removeEventListener('click', beginBattle);
+      battleButton.addEventListener('click', endBattle);
+      
+      // Update instructions
+      const instructionsElement = document.getElementById('battle-instructions');
+      instructionsElement.innerHTML = `
+        <div class="alert-box success">
+          <h3>Battle Started!</h3>
+          <p>Move your characters, defeat enemies, and complete objectives.</p>
+          <p>Select a character and click on attack tiles to attack enemies.</p>
+          <p>Attacking costs ${gameState.attackCost} energy.</p>
+        </div>
+      `;
+      
+      // Spawn some enemy characters
+      spawnEnemies();
+      
+      // After 3 seconds, hide the instructions
+      setTimeout(() => {
+        instructionsElement.style.display = 'none';
+      }, 3000);
+      
+      gameState.preparationPhase = false;
+      gameState.battleStarted = true;
+      
+      // Clear any existing interval
+      if (gameState.energyInterval) {
+        clearInterval(gameState.energyInterval);
+      }
+      
+      // Start energy regeneration
+      gameState.energyInterval = setInterval(() => {
+        regenerateEnergy();
+      }, 1000);
+      
+      // Show attack range for selected character if any
+      if (gameState.selectedCharacter) {
+        showAttackRange(gameState.selectedCharacter);
+      }
+    }
+    
+    // Show attack range for a character
+    function showAttackRange(character) {
+      // Clear any existing attack range
+      clearAttackRange();
+      
+      if (!character.position || !gameState.battleStarted) return;
+      
+      const pos = character.position;
+      const attackRange = [];
+      
+      // Determine attack range based on character type
+      // Default: 4 adjacent cells
+      const directions = [
+        { row: -1, col: 0 }, // up
+        { row: 1, col: 0 },  // down
+        { row: 0, col: -1 }, // left
+        { row: 0, col: 1 }   // right
+      ];
+      
+      // Characters with range=2 (like archers) get additional range
+      if (character.type === 'Archer') {
+        directions.push(
+          { row: -2, col: 0 }, // up 2
+          { row: 2, col: 0 },  // down 2
+          { row: 0, col: -2 }, // left 2
+          { row: 0, col: 2 },  // right 2
+          { row: -1, col: -1 }, // diagonal up-left
+          { row: -1, col: 1 },  // diagonal up-right
+          { row: 1, col: -1 },  // diagonal down-left
+          { row: 1, col: 1 }    // diagonal down-right
+        );
+      }
+      
+      // Add attack range tiles
+      directions.forEach(dir => {
+        const targetRow = pos.row + dir.row;
+        const targetCol = pos.col + dir.col;
+        
+        // Check if the target cell is on the grid
+        if (targetRow >= 0 && targetRow < 5 && targetCol >= 0 && targetCol < 5) {
+          const cell = gameState.grid[targetRow][targetCol];
+          
+          // Add attack range visual
+          const attackElement = document.createElement('div');
+          attackElement.className = 'attack-range';
+          
+          // Make it clickable if there's an enemy here
+          if (cell.occupied && cell.character && cell.character.isEnemy) {
+            attackElement.classList.add('clickable');
+            attackElement.addEventListener('click', () => attackEnemy(character, cell.character));
+          }
+          
+          cell.element.appendChild(attackElement);
+          attackRange.push({ row: targetRow, col: targetCol, element: attackElement });
+        }
+      });
+      
+      gameState.attackRangeCells = attackRange;
+      gameState.showingAttackRange = true;
+    }
+    
+    // Clear attack range
+    function clearAttackRange() {
+      if (gameState.attackRangeCells && gameState.attackRangeCells.length > 0) {
+        gameState.attackRangeCells.forEach(cell => {
+          if (cell.element && cell.element.parentNode) {
+            cell.element.remove();
+          }
+        });
+      }
+      
+      gameState.attackRangeCells = [];
+      gameState.showingAttackRange = false;
+    }
+    
+    // Handle attacking an enemy
+    function attackEnemy(attacker, defender) {
+      // Check if attacker has enough energy
+      if (attacker.energy < gameState.attackCost) {
+        alert(`Not enough energy to attack! Needed: ${gameState.attackCost}, Current: ${attacker.energy}`);
+        return;
+      }
+      
+      // Consume energy
+      attacker.energy -= gameState.attackCost;
+      
+      // Apply damage to enemy (simple version - always deals 50 damage)
+      defender.hp -= 50;
+      
+      // Check if enemy is defeated
+      if (defender.hp <= 0) {
+        // Remove enemy from grid
+        const position = defender.position;
+        gameState.grid[position.row][position.col].occupied = false;
+        gameState.grid[position.row][position.col].character = null;
+        delete gameState.occupiedCells[`${position.row},${position.col}`];
+        
+        // Remove from DOM
+        if (defender.element && defender.element.parentNode) {
+          defender.element.remove();
+        }
+        
+        // Remove from enemies list
+        gameState.enemies = gameState.enemies.filter(enemy => enemy.id !== defender.id);
+        
+        // Award currency
+        gameState.currency += 50;
+        document.getElementById('currency-amount').textContent = gameState.currency;
+      }
+      
+      // Update character info display
+      updateCharacterInfo();
+      
+      // Refresh attack range display
+      showAttackRange(attacker);
+    }
+    
+    // Spawn enemies
+    function spawnEnemies() {
+      // Spawn 3 enemies on the top two rows
+      const enemyPositions = [
+        { row: 0, col: 1 },
+        { row: 0, col: 3 },
+        { row: 1, col: 2 }
+      ];
+      
+      gameState.enemies = [];
+      
+      enemyPositions.forEach((pos, index) => {
+        const enemy = {
+          id: `enemy-${index}`,
+          name: `Enemy ${index + 1}`,
+          type: index === 1 ? 'Boss' : 'Minion',
+          hp: index === 1 ? 150 : 100, // Boss has more HP
+          maxHp: index === 1 ? 150 : 100,
+          position: pos,
+          isEnemy: true
+        };
+        
+        // Place on grid
+        placeEnemy(enemy, pos.row, pos.col);
+        
+        gameState.enemies.push(enemy);
+      });
+    }
+    
+    // Place enemy on grid
+    function placeEnemy(enemy, row, col) {
+      // Create enemy element
+      const enemyElement = document.createElement('div');
+      enemyElement.className = 'character enemy';
+      
+      // Add boss style if it's a boss
+      if (enemy.type === 'Boss') {
+        enemyElement.classList.add('boss');
+      }
+      
+      // Add first letter of enemy name
+      enemyElement.textContent = enemy.name.charAt(0);
+      
+      // Add tooltip with enemy info
+      enemyElement.title = `${enemy.name} (${enemy.type}): ${enemy.hp}/${enemy.maxHp} HP`;
+      
+      // Mark cell as occupied
+      gameState.grid[row][col].occupied = true;
+      gameState.grid[row][col].character = enemy;
+      gameState.occupiedCells[`${row},${col}`] = enemy.id;
+      
+      // Add enemy to cell
+      gameState.grid[row][col].element.classList.add('occupied');
+      gameState.grid[row][col].element.appendChild(enemyElement);
+      
+      // Store reference to DOM element
+      enemy.element = enemyElement;
+    }
+    
+    // End a battle
+    function endBattle() {
+      gameState.battleActive = false;
+      gameState.preparationPhase = false;
+      gameState.battleStarted = false;
+      
+      // Clear attack range
+      clearAttackRange();
+      
+      // Clear enemies
+      gameState.enemies.forEach(enemy => {
+        if (enemy.position) {
+          const position = enemy.position;
+          gameState.grid[position.row][position.col].occupied = false;
+          gameState.grid[position.row][position.col].character = null;
+          delete gameState.occupiedCells[`${position.row},${position.col}`];
+        }
+      });
+      gameState.enemies = [];
+      
+      // Reset button to original state
+      const battleButton = document.getElementById('start-battle');
+      battleButton.textContent = 'Start Battle';
+      battleButton.disabled = false;
+      battleButton.removeEventListener('click', endBattle);
+      battleButton.addEventListener('click', startPreparation);
+      
+      // Hide instructions
+      document.getElementById('battle-instructions').style.display = 'none';
+      
+      // Clear energy regeneration interval
+      if (gameState.energyInterval) {
+        clearInterval(gameState.energyInterval);
+        gameState.energyInterval = null;
+      }
+      
+      // Hide battle container
+      document.getElementById('battle-container').style.display = 'none';
+      
+      // Save game state
+      saveGameState();
+    }
+    
+    // Function to reset the game state
+    function resetGameState() {
+      if (confirm('This will reset all your game progress. Are you sure?')) {
+        // Remove game state from localStorage
+        localStorage.removeItem('gameState');
+        
+        // Reset gameState object
+        gameState = {
+          currency: 1000,
+          playerCharacters: [],
+          selectedCharacter: null,
+          battleActive: false,
+          grid: [],
+          occupiedCells: {},
+          energyInterval: null,
+          activeTeam: [],
+          battleCharacters: [],
+          preparationPhase: false,
+          battleStarted: false,
+          enemies: [],
+          attackRangeCells: [],
+          attackCost: 30,          // Energy cost for attacks remains the same (30)
+          showingAttackRange: false // Default max energy is now 50 (see initializeDefaultCharacters)
+        };
+        
+        // Force reload with default sample data
+        loadGameState();
+        
+        // End any active battle
+        if (document.getElementById('battle-container').style.display !== 'none') {
+          endBattle();
+        }
+        
+        // Update UI
+        document.getElementById('currency-amount').textContent = gameState.currency;
+        alert('Game state has been reset!');
+      }
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check if user is logged in
+      if (localStorage.getItem('musicUserLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Initialize background slider
+      initBackgroundSlider();
+      
+      // Load game state
+      loadGameState();
+      
+      // Event Listeners
+      document.getElementById('back-to-hub').addEventListener('click', () => {
+        // End battle if active
+        if (gameState.battleActive) {
+          endBattle();
+        }
+        window.location.href = 'game.html';
+      });
+      
+      document.getElementById('start-battle').addEventListener('click', startPreparation);
+      
+      document.getElementById('go-to-collection').addEventListener('click', () => {
+        // End battle if active
+        if (gameState.battleActive) {
+          endBattle();
+        }
+        window.location.href = 'game-collection.html';
+      });
+      
+      document.getElementById('go-to-deck').addEventListener('click', () => {
+        // End battle if active
+        if (gameState.battleActive) {
+          endBattle();
+        }
+        window.location.href = 'game-deck.html';
+      });
+      
+      // Add event listener for the reset button
+      document.getElementById('reset-game').addEventListener('click', resetGameState);
+      
+      // Set up keyboard controls for battle
+      document.addEventListener('keydown', (e) => {
+        if (!gameState.battleActive || !gameState.selectedCharacter) return;
+        
+        const char = gameState.selectedCharacter;
+        const pos = char.position;
+        
+        // Space to show attack range
+        if (e.key === ' ' && gameState.battleStarted) {
+          e.preventDefault();
+          if (gameState.showingAttackRange) {
+            clearAttackRange();
+          } else {
+            showAttackRange(char);
+          }
+          return;
+        }
+        
+        // Character selection keys
+        if (['1', '2', '3'].includes(e.key)) {
+          const index = parseInt(e.key) - 1;
+          if (index >= 0 && index < gameState.battleCharacters.length) {
+            gameState.selectedCharacter = gameState.battleCharacters[index];
+            updateCharacterInfo();
+            updateSelectedCharacterVisual();
+          }
+          return;
+        }
+        
+        // Movement keys - only process if character has been placed on grid
+        if (!pos) return;
+        
+        // Only allow movement in the actual battle phase, not preparation
+        if (!gameState.battleStarted) {
+          // During preparation, allow repositioning with WASD but only in first two rows
+          if (gameState.preparationPhase) {
+            let newRow = pos.row;
+            let newCol = pos.col;
+            
+            switch (e.key.toLowerCase()) {
+              case 'w':
+              case 'arrowup':
+                newRow = Math.max(0, pos.row - 1);
+                break;
+              case 's':
+              case 'arrowdown':
+                newRow = Math.min(1, pos.row + 1); // Only allow rows 0 and 1 during preparation
+                break;
+              case 'a':
+              case 'arrowleft':
+                newCol = Math.max(0, pos.col - 1);
+                break;
+              case 'd':
+              case 'arrowright':
+                newCol = Math.min(4, pos.col + 1);
+                break;
+              default:
+                return; // Ignore other keys
+            }
+            
+            // Only process move if position changed and target cell is not occupied
+            if ((newRow !== pos.row || newCol !== pos.col) && 
+                !gameState.grid[newRow][newCol].occupied) {
+              // Remove from old position
+              gameState.grid[pos.row][pos.col].occupied = false;
+              gameState.grid[pos.row][pos.col].character = null;
+              delete gameState.occupiedCells[`${pos.row},${pos.col}`];
+              
+              // Update grid UI
+              const gridCell = document.querySelector(`.grid-cell[data-row="${pos.row}"][data-col="${pos.col}"]`);
+              const charElement = gridCell.querySelector('.character');
+              if (charElement) {
+                gridCell.removeChild(charElement);
+              }
+              
+              // Place in new position
+              placeCharacter(char, newRow, newCol);
+            }
+          }
+          return;
+        }
+        
+        let newRow = pos.row;
+        let newCol = pos.col;
+        
+        switch (e.key.toLowerCase()) {
+          case 'w':
+          case 'arrowup':
+            newRow = Math.max(0, pos.row - 1);
+            break;
+          case 's':
+          case 'arrowdown':
+            newRow = Math.min(4, pos.row + 1);
+            break;
+          case 'a':
+          case 'arrowleft':
+            newCol = Math.max(0, pos.col - 1);
+            break;
+          case 'd':
+          case 'arrowright':
+            newCol = Math.min(4, pos.col + 1);
+            break;
+          default:
+            return; // Ignore other keys
+        }
+        
+        // Only process move if position changed and target cell is not occupied
+        if ((newRow !== pos.row || newCol !== pos.col) && 
+            !gameState.grid[newRow][newCol].occupied && 
+            char.energy >= 10) {
+          moveCharacter(char, newRow, newCol);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
